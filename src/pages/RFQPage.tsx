@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import WhatsAppIcon from '../components/icons/WhatsAppIcon';
 import { uploadToR2 } from '../lib/cloudflareR2';
+import { sendEmail } from '../lib/emailService';
 
 interface SimpleRFQForm {
   productList: string;
@@ -75,11 +76,41 @@ export default function RFQPage() {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
-    // TODO: Connect to mail server later
-    await new Promise(r => setTimeout(r, 1400));
+    
+    let imageUrl = '';
+    if (imageFile) {
+      try {
+        imageUrl = await uploadToR2(imageFile, 'rfq_uploads');
+      } catch (err) {
+        console.error("Error uploading image to R2:", err);
+      }
+    }
+
+    const msg = `
+Company: ${form.company || 'N/A'}
+
+Products Needed:
+${form.productList}
+
+Attached Image URL:
+${imageUrl || 'No image attached'}
+    `;
+
+    const result = await sendEmail({
+      name: form.company || 'RFQ Submitter',
+      email: form.email,
+      phone: form.phone,
+      title: 'New Procurement RFQ',
+      message: msg.trim()
+    });
+
     setSubmitting(false);
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (result.success) {
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      alert(`Failed to send RFQ: ${result.error || "Please check your connection or contact us via WhatsApp."}`);
+    }
   };
 
   const handleWhatsAppSubmit = async () => {
@@ -89,12 +120,31 @@ export default function RFQPage() {
     let imageUrl = '';
     if (imageFile) {
       try {
-        // Upload image to Cloudflare R2 instead of Firebase
         imageUrl = await uploadToR2(imageFile, 'rfq_uploads');
       } catch (err) {
         console.error("Error uploading image to R2 (skipped):", err);
       }
     }
+    
+    // Send background email alert
+    const mailMsg = `
+Source: WhatsApp RFQ Submission
+Company: ${form.company || 'N/A'}
+
+Products Needed:
+${form.productList}
+
+Attached Image URL:
+${imageUrl || 'No image attached'}
+    `;
+
+    await sendEmail({
+      name: form.company || 'WhatsApp RFQ',
+      email: form.email,
+      phone: form.phone,
+      title: 'New WhatsApp RFQ Alert',
+      message: mailMsg.trim()
+    });
     
     const msg = `*New Procurement Request*\n\n` +
       (form.productList ? `*Products Needed:*\n${form.productList}\n\n` : '') +

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, Building2, Globe, ChevronRight } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { sendEmail } from '../lib/emailService';
 
 export default function ContactPage() {
   const { settings } = useStore();
@@ -12,9 +13,34 @@ export default function ContactPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [sending, setSending] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSent(true);
+    setSending(true);
+
+    const formattedMessage = `
+Company: ${form.company || 'N/A'}
+Subject: ${form.subject}
+
+Message:
+${form.message}
+    `;
+
+    const result = await sendEmail({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      title: 'New Contact Us Inquiry',
+      message: formattedMessage.trim(),
+    });
+
+    setSending(false);
+    if (result.success) {
+      setSent(true);
+    } else {
+      alert(`Failed to send message: ${result.error || "Please check your connection or contact us via WhatsApp."}`);
+    }
   };
 
   // Process dynamic contact items from settings
@@ -191,10 +217,11 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-4 rounded-xl transition-colors shadow-lg shadow-slate-200"
+                  disabled={sending}
+                  className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-4 rounded-xl transition-colors shadow-lg shadow-slate-200 disabled:opacity-70"
                 >
                   <Send className="w-4 h-4" />
-                  Send Message
+                  {sending ? 'Sending...' : 'Send Message'}
                 </button>
               </form>
             )}

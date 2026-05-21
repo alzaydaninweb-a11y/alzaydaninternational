@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { sendEmail } from '../lib/emailService';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -97,6 +98,15 @@ export default function CheckoutPage() {
         message += `\n(Kindly confirm pricing for the above items)\n`;
         message += `------------------------------------------\n`;
       }
+
+      // Send background email alert
+      await sendEmail({
+        name: `${address.firstName} ${address.lastName}`,
+        email: address.email,
+        phone: address.phone,
+        title: `New Order Alert: ${orderId}`,
+        message: message.trim()
+      });
 
       const encodedMessage = encodeURIComponent(message);
       
