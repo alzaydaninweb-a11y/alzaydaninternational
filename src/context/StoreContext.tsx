@@ -119,9 +119,11 @@ type StoreState = {
 
 type Subscriber = (state: StoreState) => void;
 
-const CACHE_KEY     = 'az_products_cache_v2';
+const CACHE_KEY          = 'az_products_cache_v2';
+const CACHE_SETTINGS_KEY = 'az_settings_cache_v1';
+const CACHE_CATS_KEY     = 'az_categories_cache_v1';
 
-// Seed from localStorage cache so the page renders instantly
+// ── Products cache ─────────────────────────────────────────────────────────────
 function loadCachedProducts(): Product[] {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -134,29 +136,59 @@ function loadCachedProducts(): Product[] {
     return MOCK_PRODUCTS;
   }
 }
-
 function saveProductsCache(products: Product[]) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(products)); } catch { /* quota */ }
+}
+
+// ── Settings cache ─────────────────────────────────────────────────────────────
+function loadCachedSettings(): GeneralSettings {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(products));
-  } catch { /* quota exceeded — ignore */ }
+    const raw = localStorage.getItem(CACHE_SETTINGS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as GeneralSettings;
+  } catch {
+    localStorage.removeItem(CACHE_SETTINGS_KEY);
+    return {};
+  }
+}
+function saveSettingsCache(s: GeneralSettings) {
+  try { localStorage.setItem(CACHE_SETTINGS_KEY, JSON.stringify(s)); } catch { /* quota */ }
+}
+
+// ── Categories cache ───────────────────────────────────────────────────────────
+function loadCachedCategories(): { list: string[]; images: Record<string, string> } {
+  try {
+    const raw = localStorage.getItem(CACHE_CATS_KEY);
+    if (!raw) return { list: INITIAL_CATEGORIES, images: {} };
+    return JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(CACHE_CATS_KEY);
+    return { list: INITIAL_CATEGORIES, images: {} };
+  }
+}
+function saveCategoriesCache(list: string[], images: Record<string, string>) {
+  try { localStorage.setItem(CACHE_CATS_KEY, JSON.stringify({ list, images })); } catch { /* quota */ }
 }
 
 // Clear old cache keys from previous versions
 const OLD_KEYS = ['az_products_cache', 'az_industries_cache'];
 OLD_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
 
+// Seed state from ALL caches — zero waiting, instant first paint
 const cachedProducts   = loadCachedProducts();
+const cachedSettings   = loadCachedSettings();
+const cachedCategories = loadCachedCategories();
 
 let state: StoreState = {
-  products:   cachedProducts,
-  categories: INITIAL_CATEGORIES,
-  categoryImages: {},
-  videos: [],
-  dmEmployees: [],
+  products:            cachedProducts,
+  categories:          cachedCategories.list,
+  categoryImages:      cachedCategories.images,
+  videos:              [],
+  dmEmployees:         [],
   videoSectionVisible: true,
-  loading: cachedProducts.length === 0,
-  firestoreError: null,
-  settings: {},
+  loading:             cachedProducts === MOCK_PRODUCTS, // only show loading if no real cached data
+  firestoreError:      null,
+  settings:            cachedSettings,
 };
 
 const subscribers = new Set<Subscriber>();
@@ -212,15 +244,14 @@ function startListeners() {
     (snap) => {
       if (snap.exists()) {
         const data = snap.data();
-        setState({ 
-          categories: data.list as string[] || [],
-          categoryImages: data.images as Record<string, string> || {} 
-        });
+        const list   = data.list as string[] || [];
+        const images = data.images as Record<string, string> || {};
+        saveCategoriesCache(list, images);   // ← cache it
+        setState({ categories: list, categoryImages: images });
       }
     },
     (err) => console.error('[Store] categories:', err.code)
   );
-
 
   // Videos
   onSnapshot(
@@ -262,7 +293,9 @@ function startListeners() {
     doc(db, 'settings', 'general'),
     (snap) => {
       if (snap.exists()) {
-        setState({ settings: snap.data() as GeneralSettings });
+        const s = snap.data() as GeneralSettings;
+        saveSettingsCache(s);   // ← cache it
+        setState({ settings: s });
       }
     },
     (err) => console.error('[Store] generalSettings:', err.code)
