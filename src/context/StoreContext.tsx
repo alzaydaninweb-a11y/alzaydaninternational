@@ -4,7 +4,7 @@ import {
   deleteDoc, setDoc, writeBatch,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { CATEGORIES as INITIAL_CATEGORIES, PRODUCTS as MOCK_PRODUCTS } from '../data/mockData';
+import INITIAL_STATE from '../data/initialState.json';
 import { getPublishedBlogs } from '../lib/blogService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -127,13 +127,13 @@ const CACHE_CATS_KEY     = 'az_categories_cache_v1';
 function loadCachedProducts(): Product[] {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return MOCK_PRODUCTS;
+    if (!raw) return INITIAL_STATE.products as Product[];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || !parsed.every(p => p && p.id && p.name)) return MOCK_PRODUCTS;
+    if (!Array.isArray(parsed) || !parsed.every(p => p && p.id && p.name)) return INITIAL_STATE.products as Product[];
     return parsed as Product[];
   } catch {
     localStorage.removeItem(CACHE_KEY);
-    return MOCK_PRODUCTS;
+    return INITIAL_STATE.products as Product[];
   }
 }
 function saveProductsCache(products: Product[]) {
@@ -144,11 +144,11 @@ function saveProductsCache(products: Product[]) {
 function loadCachedSettings(): GeneralSettings {
   try {
     const raw = localStorage.getItem(CACHE_SETTINGS_KEY);
-    if (!raw) return {};
+    if (!raw) return INITIAL_STATE.settings as GeneralSettings;
     return JSON.parse(raw) as GeneralSettings;
   } catch {
     localStorage.removeItem(CACHE_SETTINGS_KEY);
-    return {};
+    return INITIAL_STATE.settings as GeneralSettings;
   }
 }
 function saveSettingsCache(s: GeneralSettings) {
@@ -159,11 +159,11 @@ function saveSettingsCache(s: GeneralSettings) {
 function loadCachedCategories(): { list: string[]; images: Record<string, string> } {
   try {
     const raw = localStorage.getItem(CACHE_CATS_KEY);
-    if (!raw) return { list: INITIAL_CATEGORIES, images: {} };
+    if (!raw) return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {} };
     return JSON.parse(raw);
   } catch {
     localStorage.removeItem(CACHE_CATS_KEY);
-    return { list: INITIAL_CATEGORIES, images: {} };
+    return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {} };
   }
 }
 function saveCategoriesCache(list: string[], images: Record<string, string>) {
@@ -186,7 +186,7 @@ let state: StoreState = {
   videos:              [],
   dmEmployees:         [],
   videoSectionVisible: true,
-  loading:             cachedProducts === MOCK_PRODUCTS, // only show loading if no real cached data
+  loading:             false, // With hardcoded initial state, we never need a blocking loading screen
   firestoreError:      null,
   settings:            cachedSettings,
 };
@@ -467,3 +467,5 @@ export function useStore() {
   if (!ctx) throw new Error('useStore must be used within StoreProvider');
   return ctx;
 }
+
+

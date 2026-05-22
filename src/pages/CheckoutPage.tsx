@@ -37,29 +37,29 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 1. Save to Firestore (non-blocking)
+      // 1. Save to Firestore (gracefully handle permission/network errors)
       try {
         await addDoc(collection(db, 'orders'), {
           orderId,
-          customerName: `${address.firstName || ''} ${address.lastName || ''}`.trim(),
-          customerEmail: address.email || '',
-          customerPhone: address.phone || '',
+          customerName: `${address.firstName} ${address.lastName}`,
+          customerEmail: address.email,
+          customerPhone: address.phone,
           company: address.company || '',
-          address: `${address.street || ''}, ${address.area || ''}, ${address.emirate || ''}`,
+          address: `${address.street}, ${address.area}, ${address.emirate}`,
           items: cartItems.map(item => ({
-            id: item.id || '',
-            name: item.name || '',
-            price: item.price || 0,
-            quantity: item.quantity || 1,
-            image: item.image || ''
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
           })),
-          subtotal: subtotal || 0,
-          total: total || 0,
+          subtotal,
+          total,
           status: 'Processing',
           createdAt: serverTimestamp(),
         });
       } catch (dbErr) {
-        console.error('Non-fatal: Failed to save order to Firestore:', dbErr);
+        console.error('Firestore save failed, but continuing to WhatsApp:', dbErr);
       }
 
       // 2. Format WhatsApp Message Template
@@ -103,19 +103,19 @@ export default function CheckoutPage() {
         message += `------------------------------------------\n`;
       }
 
-      // Send background email alert
-      await sendEmail({
+      // Send background email alert (don't await so it's instant and doesn't block WhatsApp)
+      sendEmail({
         name: `${address.firstName} ${address.lastName}`,
         email: address.email,
         phone: address.phone,
         title: `New Order Alert: ${orderId}`,
         message: message.trim()
-      });
+      }).catch(err => console.error("Email alert failed, but order continues:", err));
 
       const encodedMessage = encodeURIComponent(message);
       
       // Use specific order number from dashboard settings
-      const targetPhone = String(settings?.whatsappRouting?.product || settings?.orderWhatsAppNumber || settings?.phoneNumber || '');
+      const targetPhone = settings?.whatsappRouting?.product || settings?.orderWhatsAppNumber || settings?.phoneNumber || '';
       const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
       const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 

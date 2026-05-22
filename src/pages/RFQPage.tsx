@@ -147,13 +147,14 @@ Attached Image URL:
 ${imageUrl || 'No image attached'}
     `;
 
-    await sendEmail({
+    // Send background email alert (don't await so it's instant and doesn't block WhatsApp)
+    sendEmail({
       name: form.company || 'WhatsApp RFQ',
       email: form.email,
       phone: form.phone,
       title: 'New WhatsApp RFQ Alert',
       message: mailMsg.trim()
-    });
+    }).catch(err => console.error("Email alert failed, but WhatsApp continues:", err));
     
     const msg = `*New Procurement Request*\n\n` +
       (form.productList ? `*Products Needed:*\n${form.productList}\n\n` : '') +
