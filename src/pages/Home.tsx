@@ -326,14 +326,10 @@ export default function Home() {
 
           {/* Hero Slider — full-bleed background image */}
           {(() => {
-            const slides = settings?.heroSlides || [];
-            if (slides.length === 0) {
-              return (
-                <div className="flex-grow flex items-center justify-center bg-gray-50 border border-dashed border-gray-300 rounded-xl h-[420px]">
-                  <p className="text-gray-400 text-sm">No hero banners added yet. Add slides in the Admin Panel.</p>
-                </div>
-              );
-            }
+            // Always fall back to default slides — never show an empty hero
+            const slides = (settings?.heroSlides && settings.heroSlides.length > 0)
+              ? settings.heroSlides
+              : DEFAULT_HERO_SLIDES;
             const slide = slides[activeSlide % slides.length];
             return (
               <div className="flex-grow relative rounded-xl overflow-hidden h-[420px]">
