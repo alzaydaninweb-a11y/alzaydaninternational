@@ -2,9 +2,18 @@ import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, Building2, Globe, ChevronRight } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { sendEmail } from '../lib/emailService';
+import { useSEO } from '../lib/useSEO';
 
 export default function ContactPage() {
   const { settings } = useStore();
+
+  useSEO({
+    title: 'Contact Us | Al Zaydan International — UAE B2B Industrial Materials Supplier',
+    description: 'Get in touch with Al Zaydan International FZE for bulk procurement inquiries, sourcing requests, and B2B supply partnerships. UAE-based industrial materials supplier serving the GCC.',
+    canonical: 'https://www.alzaydaninternational.com/contact',
+    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+  });
+
   const [form, setForm] = useState({
     name: '', company: '', email: '', phone: '', subject: '', message: '',
   });

@@ -7,6 +7,7 @@ import {
 import WhatsAppIcon from '../components/icons/WhatsAppIcon';
 import { uploadToR2 } from '../lib/cloudflareR2';
 import { sendEmail } from '../lib/emailService';
+import { useSEO } from '../lib/useSEO';
 
 interface SimpleRFQForm {
   productList: string;
@@ -26,6 +27,14 @@ const fieldError = 'border-red-400 bg-red-50/30 focus:ring-red-400/20 focus:bord
 
 export default function RFQPage() {
   const { settings } = useStore();
+
+  useSEO({
+    title: 'Request for Quotation (RFQ) | Al Zaydan International — Bulk B2B Procurement UAE',
+    description: 'Submit a bulk procurement request to Al Zaydan International FZE. Upload your product list or describe your requirements and our UAE-based sourcing team will respond within 24 hours.',
+    canonical: 'https://www.alzaydaninternational.com/rfq',
+    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+  });
+
   const [form, setForm]         = useState<SimpleRFQForm>(EMPTY);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [errors, setErrors]     = useState<Partial<Record<keyof SimpleRFQForm | 'file', string>>>({});

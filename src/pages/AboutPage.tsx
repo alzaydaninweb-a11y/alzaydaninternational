@@ -5,6 +5,22 @@ import {
   Target, Eye, Heart,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSEO } from '../lib/useSEO';
+
+const ABOUT_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'About Al Zaydan International FZE',
+  url: 'https://www.alzaydaninternational.com/about',
+  description: 'Al Zaydan International FZE is a UAE Free Zone B2B trading, sourcing, and distribution company serving industrial, construction, and commercial buyers across the Gulf region.',
+  mainEntity: {
+    '@type': 'Organization',
+    name: 'Al Zaydan International FZE',
+    foundingLocation: 'Ajman Free Zone, UAE',
+    areaServed: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'],
+    knowsAbout: ['Industrial Materials', 'Traffic Safety Equipment', 'B2B Sourcing', 'Road Safety Products', 'Packaging Materials', 'Construction Supplies'],
+  },
+};
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -74,6 +90,14 @@ const PILLARS = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AboutPage() {
+  useSEO({
+    title: 'About Us | Al Zaydan International FZE — UAE B2B Industrial Sourcing Company',
+    description: 'Learn about Al Zaydan International FZE — a UAE Free Zone B2B trading, sourcing and distribution company supplying industrial materials, road safety equipment, packaging and construction supplies across the GCC.',
+    canonical: 'https://www.alzaydaninternational.com/about',
+    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    schema: ABOUT_SCHEMA,
+  });
+
   return (
     <div className="bg-white">
 

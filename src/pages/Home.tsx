@@ -10,6 +10,49 @@ import ProductCard from '../components/ui/ProductCard';
 import QuickSearchPills from '../components/home/QuickSearchPills';
 import TrendingProcurement from '../components/home/TrendingProcurement';
 import ProcurementSupport from '../components/home/ProcurementSupport';
+import { useSEO } from '../lib/useSEO';
+
+const HOME_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://www.alzaydaninternational.com/#organization',
+      name: 'Al Zaydan International FZE',
+      url: 'https://www.alzaydaninternational.com',
+      logo: 'https://www.alzaydaninternational.com/alyathan.png',
+      description: 'UAE-based B2B industrial materials sourcing, trading, and distribution company specialising in traffic safety, road safety, industrial tools, packaging materials, and construction supplies.',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'AE',
+        addressRegion: 'Ajman',
+        addressLocality: 'Ajman Free Zone',
+      },
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          contactType: 'sales',
+          telephone: '+971-55-155-1329',
+          email: 'info@alzaydanintl.com',
+          availableLanguage: ['English', 'Arabic'],
+        },
+      ],
+      sameAs: [],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://www.alzaydaninternational.com/#website',
+      url: 'https://www.alzaydaninternational.com',
+      name: 'Al Zaydan International',
+      publisher: { '@id': 'https://www.alzaydaninternational.com/#organization' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://www.alzaydaninternational.com/search?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
 
 
 
@@ -111,6 +154,14 @@ const getCategorySub = (categoryName: string, products: Product[]) => {
 export default function Home() {
   const { products, categories, settings, categoryImages } = useStore();
   const [activeSlide, setActiveSlide] = useState(0);
+
+  useSEO({
+    title: 'Al Zaydan International | UAE B2B Industrial Materials & Safety Equipment Sourcing',
+    description: 'Al Zaydan International FZE — UAE-based B2B sourcing and distribution of industrial materials, traffic safety equipment, road safety products, packaging materials, and construction supplies. Request a bulk quote today.',
+    canonical: 'https://www.alzaydaninternational.com/',
+    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    schema: HOME_SCHEMA,
+  });
 
   const activeCategories = useMemo(() => {
     return categories.filter(catName => products.some(p => p.category === catName));

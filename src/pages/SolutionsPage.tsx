@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Package, Layers, ShieldCheck, Printer, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSEO } from '../lib/useSEO';
 
 // ─── Division Data ────────────────────────────────────────────────────────────
 
@@ -176,6 +177,13 @@ function DivisionCard({ div, index }: { div: typeof DIVISIONS[0]; index: number 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SolutionsPage() {
+  useSEO({
+    title: 'Our Solutions | Al Zaydan International — B2B Industrial Supply Divisions UAE',
+    description: 'Explore Al Zaydan International’s 4 B2B supply divisions: Packaging & Adhesives, Signage & LED, Reflective Safety Materials, and Printing Consumables & FMCG. UAE-based industrial materials supplier.',
+    canonical: 'https://www.alzaydaninternational.com/solutions',
+    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+  });
+
   return (
     <div className="bg-white">
 
