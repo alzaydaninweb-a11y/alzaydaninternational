@@ -114,6 +114,17 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TC9XFCMS"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+
+    <!--
+      SEO-only headings: visually hidden but always in the raw HTML for crawlers.
+      React renders its own H1 inside #root; these headings exist OUTSIDE #root
+      so they are present even when JavaScript is disabled or not yet executed.
+    -->
+    <div aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px;top:-9999px;left:-9999px;">
+      <h1>Al Zaydan International — UAE B2B Industrial Materials Sourcing &amp; Distribution</h1>
+      <h2>Traffic Safety Equipment, Packaging Materials, Reflective Sheeting &amp; Industrial Supplies — UAE Free Zone Company</h2>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
