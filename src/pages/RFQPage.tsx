@@ -32,7 +32,7 @@ export default function RFQPage() {
     title: 'Request for Quotation (RFQ) | Al Zaydan International — Bulk B2B Procurement UAE',
     description: 'Submit a bulk procurement request to Al Zaydan International FZE. Upload your product list or describe your requirements and our UAE-based sourcing team will respond within 24 hours.',
     canonical: 'https://www.alzaydaninternational.com/rfq',
-    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
   });
 
   const [form, setForm]         = useState<SimpleRFQForm>(EMPTY);

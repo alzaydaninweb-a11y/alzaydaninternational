@@ -34,7 +34,7 @@ export default function AdminLayout() {
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 h-16 border-b border-slate-800 shrink-0">
         <img
-          src="/alyathan.png"
+          src="/android-chrome-512x512.png"
           alt="Al Zaydan International"
           className="h-7 w-auto object-contain brightness-0 invert shrink-0"
         />

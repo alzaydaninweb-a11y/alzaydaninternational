@@ -94,7 +94,7 @@ export default function AboutPage() {
     title: 'About Us | Al Zaydan International FZE — UAE B2B Industrial Sourcing Company',
     description: 'Learn about Al Zaydan International FZE — a UAE Free Zone B2B trading, sourcing and distribution company supplying industrial materials, road safety equipment, packaging and construction supplies across the GCC.',
     canonical: 'https://www.alzaydaninternational.com/about',
-    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
     schema: ABOUT_SCHEMA,
   });
 

@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   FileText, PhoneCall, Upload, ChevronUp, ChevronDown,
-  X, Zap, Clock, CheckCircle2, Send, Loader2, Package
+  X, Zap, Clock, CheckCircle2, Send, Loader2, Package, Mail
 } from 'lucide-react';
 import WhatsAppIcon from '../icons/WhatsAppIcon';
 import { useStore } from '../../context/StoreContext';
 import { uploadToR2 } from '../../lib/cloudflareR2';
+import { sendEmail } from '../../lib/emailService';
 
 /* ─── Availability helper (deterministic "online hours") ───────────────────── */
 function isTeamOnline(): boolean {
@@ -27,7 +28,7 @@ function MiniRFQPopup({ onClose, waNumber, isMobile = false }: MiniRFQProps) {
   const [contactPhone, setContactPhone] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<'email' | 'whatsapp' | false>(false);
   const ref = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,27 +41,41 @@ function MiniRFQPopup({ onClose, waNumber, isMobile = false }: MiniRFQProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose, isMobile]);
 
-  const handleWhatsAppSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (type: 'email' | 'whatsapp') => {
     if (!contactPhone || !email || !company || !imageFile) return;
-    setSubmitting(true);
-    
+    setSubmitting(type);
+
     let imageUrl = '';
     try {
       imageUrl = await uploadToR2(imageFile, 'rfq_uploads');
     } catch (err) {
       console.error('Upload failed', err);
     }
-    
-    const msg = `*Equipment / Material List Upload*\n\n` +
-      (imageUrl ? `*Attached File:* ${imageUrl}\n\n` : '') +
-      `*Contact Info:*\n` +
-      `Company: ${company}\n` +
-      `Phone: ${contactPhone}\n` +
-      `Email: ${email}`;
 
-    window.location.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+    if (type === 'email') {
+      // ── 1. Auto-send email via EmailJS ───────────────
+      await sendEmail({
+        name:    company,
+        email:   email,
+        phone:   contactPhone,
+        title:   'Equipment List Upload — Quick RFQ',
+        message: `Quick RFQ submitted via Upload Equipment List popup.\n\nCompany: ${company}\nPhone: ${contactPhone}\nEmail: ${email}\nAttached File: ${imageUrl || 'Not uploaded'}`,
+      });
+    } else {
+      // ── 2. Open WhatsApp ──────────────────────────────
+      const msg =
+        `*Equipment / Material List Upload*\n\n` +
+        (imageUrl ? `*Attached File:* ${imageUrl}\n\n` : '') +
+        `*Contact Info:*\n` +
+        `Company: ${company}\n` +
+        `Phone: ${contactPhone}\n` +
+        `Email: ${email}`;
+
+      window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
     setSubmitting(false);
+    onClose();
   };
 
   const containerClasses = isMobile
@@ -80,9 +95,9 @@ function MiniRFQPopup({ onClose, waNumber, isMobile = false }: MiniRFQProps) {
       </div>
 
       <div className="p-4">
-        <form onSubmit={handleWhatsAppSubmit} className="space-y-3">
+        <form onSubmit={e => e.preventDefault()} className="space-y-3">
           <p className="text-[11px] text-gray-400 leading-snug">
-            Upload your list of materials to get a fast quote via WhatsApp.
+            Upload your materials list and choose how you want to receive your quote.
           </p>
 
           <div>
@@ -125,16 +140,29 @@ function MiniRFQPopup({ onClose, waNumber, isMobile = false }: MiniRFQProps) {
             </div>
           </div>
 
-          <div className="pt-1">
+          <div className="pt-1 flex flex-col gap-2">
             <button
-              type="submit"
-              disabled={submitting || !imageFile || !company || !contactPhone || !email}
+              type="button"
+              onClick={() => handleSubmit('email')}
+              disabled={!!submitting || !imageFile || !company || !contactPhone || !email}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition-all"
+            >
+              {submitting === 'email' ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+              ) : (
+                <><Mail className="w-4 h-4" /> Submit via Email</>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit('whatsapp')}
+              disabled={!!submitting || !imageFile || !company || !contactPhone || !email}
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-[12px] font-bold rounded-xl transition-all"
             >
-              {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+              {submitting === 'whatsapp' ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
               ) : (
-                <><WhatsAppIcon className="w-4 h-4" /> Submit Request</>
+                <><WhatsAppIcon className="w-4 h-4" /> Submit via WhatsApp</>
               )}
             </button>
           </div>

@@ -56,7 +56,7 @@ export default function Footer() {
           <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="mb-6 flex items-center gap-2.5 group">
               <img
-                src="/alyathan.png"
+                src="/android-chrome-512x512.png"
                 alt="Al Zaydan International"
                 className="h-8 w-auto object-contain brightness-0 invert shrink-0"
               />

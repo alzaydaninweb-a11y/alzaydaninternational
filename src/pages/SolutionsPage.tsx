@@ -181,7 +181,7 @@ export default function SolutionsPage() {
     title: 'Our Solutions | Al Zaydan International — B2B Industrial Supply Divisions UAE',
     description: 'Explore Al Zaydan International’s 4 B2B supply divisions: Packaging & Adhesives, Signage & LED, Reflective Safety Materials, and Printing Consumables & FMCG. UAE-based industrial materials supplier.',
     canonical: 'https://www.alzaydaninternational.com/solutions',
-    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
   });
 
   return (

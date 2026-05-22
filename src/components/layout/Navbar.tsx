@@ -196,7 +196,7 @@ export default function Navbar() {
           <div className="flex items-center shrink-0">
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
-                src="/alyathan.png"
+                src="/android-chrome-512x512.png"
                 alt="Al Zaydan International"
                 className="h-8 md:h-9 w-auto object-contain shrink-0"
               />
@@ -357,7 +357,7 @@ export default function Navbar() {
 
               <Link to="/" className="flex items-center gap-2 group">
                 <img
-                  src="/alyathan.png"
+                  src="/android-chrome-512x512.png"
                   alt="Al Zaydan International"
                   className="h-7 w-auto object-contain shrink-0"
                 />

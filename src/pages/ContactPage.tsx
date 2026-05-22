@@ -11,7 +11,7 @@ export default function ContactPage() {
     title: 'Contact Us | Al Zaydan International — UAE B2B Industrial Materials Supplier',
     description: 'Get in touch with Al Zaydan International FZE for bulk procurement inquiries, sourcing requests, and B2B supply partnerships. UAE-based industrial materials supplier serving the GCC.',
     canonical: 'https://www.alzaydaninternational.com/contact',
-    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
   });
 
   const [form, setForm] = useState({

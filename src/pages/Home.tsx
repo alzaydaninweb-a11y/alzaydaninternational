@@ -20,7 +20,7 @@ const HOME_SCHEMA = {
       '@id': 'https://www.alzaydaninternational.com/#organization',
       name: 'Al Zaydan International FZE',
       url: 'https://www.alzaydaninternational.com',
-      logo: 'https://www.alzaydaninternational.com/alyathan.png',
+      logo: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
       description: 'UAE-based B2B industrial materials sourcing, trading, and distribution company specialising in traffic safety, road safety, industrial tools, packaging materials, and construction supplies.',
       address: {
         '@type': 'PostalAddress',
@@ -159,7 +159,7 @@ export default function Home() {
     title: 'Al Zaydan International | UAE B2B Industrial Materials & Safety Equipment Sourcing',
     description: 'Al Zaydan International FZE — UAE-based B2B sourcing and distribution of industrial materials, traffic safety equipment, road safety products, packaging materials, and construction supplies. Request a bulk quote today.',
     canonical: 'https://www.alzaydaninternational.com/',
-    ogImage: 'https://www.alzaydaninternational.com/alyathan.png',
+    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
     schema: HOME_SCHEMA,
   });
 
