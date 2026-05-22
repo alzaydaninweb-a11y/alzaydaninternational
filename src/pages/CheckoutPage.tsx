@@ -37,26 +37,30 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 1. Save to Firestore
-      await addDoc(collection(db, 'orders'), {
-        orderId,
-        customerName: `${address.firstName} ${address.lastName}`,
-        customerEmail: address.email,
-        customerPhone: address.phone,
-        company: address.company || '',
-        address: `${address.street}, ${address.area}, ${address.emirate}`,
-        items: cartItems.map(item => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          image: item.image
-        })),
-        subtotal,
-        total,
-        status: 'Processing',
-        createdAt: serverTimestamp(),
-      });
+      // 1. Save to Firestore (non-blocking)
+      try {
+        await addDoc(collection(db, 'orders'), {
+          orderId,
+          customerName: `${address.firstName || ''} ${address.lastName || ''}`.trim(),
+          customerEmail: address.email || '',
+          customerPhone: address.phone || '',
+          company: address.company || '',
+          address: `${address.street || ''}, ${address.area || ''}, ${address.emirate || ''}`,
+          items: cartItems.map(item => ({
+            id: item.id || '',
+            name: item.name || '',
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            image: item.image || ''
+          })),
+          subtotal: subtotal || 0,
+          total: total || 0,
+          status: 'Processing',
+          createdAt: serverTimestamp(),
+        });
+      } catch (dbErr) {
+        console.error('Non-fatal: Failed to save order to Firestore:', dbErr);
+      }
 
       // 2. Format WhatsApp Message Template
       const pricedItems  = cartItems.filter(i => i.priceType !== 'hidden' && i.price > 0);
@@ -111,7 +115,7 @@ export default function CheckoutPage() {
       const encodedMessage = encodeURIComponent(message);
       
       // Use specific order number from dashboard settings
-      const targetPhone = settings?.whatsappRouting?.product || settings?.orderWhatsAppNumber || settings?.phoneNumber || '';
+      const targetPhone = String(settings?.whatsappRouting?.product || settings?.orderWhatsAppNumber || settings?.phoneNumber || '');
       const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
       const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 
