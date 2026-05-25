@@ -8,10 +8,12 @@ export default function ContactPage() {
   const { settings } = useStore();
 
   useSEO({
-    title: 'Contact Us | Al Zaydan International — UAE B2B Industrial Materials Supplier',
-    description: 'Get in touch with Al Zaydan International FZE for bulk procurement inquiries, sourcing requests, and B2B supply partnerships. UAE-based industrial materials supplier serving the GCC.',
+    title: 'Contact Al Zaydan International | B2B Industrial Supplies UAE',
+    // 64 chars ↑
+    description: 'Contact Al Zaydan International FZE for B2B industrial materials sourcing enquiries. Ajman Free Zone, UAE. Available via WhatsApp, email & phone. Request a quote.',
+    // 163 chars ↑
     canonical: 'https://www.alzaydaninternational.com/contact',
-    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+    ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
   });
 
   const [form, setForm] = useState({
@@ -95,9 +97,12 @@ ${form.message}
       <section className="relative bg-slate-900 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
-            src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?auto=format&fit=crop&q=80&w=1600"
+            src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?auto=format&fit=crop&q=70&w=1600&fm=webp"
             alt="Contact"
             className="w-full h-full object-cover"
+            width="1600"
+            height="500"
+            fetchpriority="high"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent" />

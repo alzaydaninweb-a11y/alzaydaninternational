@@ -42,7 +42,7 @@ export default function CategoryRail() {
               >
                 {imageUrl ? (
                   <div className="w-full aspect-[4/3] bg-white flex items-center justify-center p-2 border-b border-gray-100 overflow-hidden">
-                    <img src={imageUrl} alt={cat} className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
+                    <img src={imageUrl} alt={cat} width="120" height="90" loading="lazy" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 ) : (
                   <div className={`w-full aspect-[4/3] flex items-center justify-center border-b border-gray-100 bg-gradient-to-br ${CAT_COLORS[i % CAT_COLORS.length]}`}>

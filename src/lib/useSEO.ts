@@ -5,19 +5,25 @@ interface SEOProps {
   description: string;
   canonical: string;
   ogImage?: string;
+  ogType?: 'website' | 'article';
   schema?: object;
 }
 
 /**
  * useSEO — sets page-level <title>, <meta description>, <link rel="canonical">
- * and injects/removes JSON-LD structured data on each page visit.
+ * og:* Open Graph, twitter:* Card, and injects/removes JSON-LD structured data.
+ *
+ * All props are reactive: changing any will immediately update the DOM.
  */
-export function useSEO({ title, description, canonical, ogImage, schema }: SEOProps) {
+export function useSEO({ title, description, canonical, ogImage, ogType = 'website', schema }: SEOProps) {
   useEffect(() => {
-    // ── Title ──────────────────────────────────────────────────────────
+    // ── Shared OG image (fallback to logo if none provided) ───────────────
+    const resolvedImage = ogImage || 'https://www.alzaydaninternational.com/images/og-banner.jpg';
+
+    // ── Title ──────────────────────────────────────────────────────────────
     document.title = title;
 
-    // ── Meta description ───────────────────────────────────────────────
+    // ── Meta description ───────────────────────────────────────────────────
     let metaDesc = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -26,7 +32,7 @@ export function useSEO({ title, description, canonical, ogImage, schema }: SEOPr
     }
     metaDesc.content = description;
 
-    // ── Canonical ──────────────────────────────────────────────────────
+    // ── Canonical ──────────────────────────────────────────────────────────
     let canonicalEl = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!canonicalEl) {
       canonicalEl = document.createElement('link');
@@ -35,7 +41,22 @@ export function useSEO({ title, description, canonical, ogImage, schema }: SEOPr
     }
     canonicalEl.href = canonical;
 
-    // ── OG tags ────────────────────────────────────────────────────────
+    // ── Hreflang ───────────────────────────────────────────────────────────
+    const setHreflang = (lang: string, url: string) => {
+      let el = document.querySelector<HTMLLinkElement>(`link[hreflang="${lang}"]`);
+      if (!el) {
+        el = document.createElement('link');
+        el.rel = 'alternate';
+        el.hreflang = lang;
+        document.head.appendChild(el);
+      }
+      el.href = url;
+    };
+    setHreflang('en', canonical);
+    setHreflang('x-default', canonical);
+    // Note: When Arabic pages are built in /ar/, add: setHreflang('ar', canonical.replace('.com/', '.com/ar/'));
+
+    // ── Open Graph ─────────────────────────────────────────────────────────
     const setMeta = (property: string, content: string) => {
       let el = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`);
       if (!el) {
@@ -45,13 +66,18 @@ export function useSEO({ title, description, canonical, ogImage, schema }: SEOPr
       }
       el.content = content;
     };
-    setMeta('og:title', title);
+    setMeta('og:title',       title);
     setMeta('og:description', description);
-    setMeta('og:url', canonical);
-    if (ogImage) setMeta('og:image', ogImage);
+    setMeta('og:url',         canonical);
+    setMeta('og:type',        ogType);
+    setMeta('og:site_name',   'Al Zaydan International');
+    setMeta('og:image',       resolvedImage);
+    setMeta('og:image:width',  '1200');
+    setMeta('og:image:height', '630');
+    setMeta('og:locale',      'en_AE');
 
-    // ── Twitter / X Card ───────────────────────────────────────────────
-    const setTwitterMeta = (name: string, content: string) => {
+    // ── Twitter / X Card ───────────────────────────────────────────────────
+    const setName = (name: string, content: string) => {
       let el = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
       if (!el) {
         el = document.createElement('meta');
@@ -60,13 +86,13 @@ export function useSEO({ title, description, canonical, ogImage, schema }: SEOPr
       }
       el.content = content;
     };
-    setTwitterMeta('twitter:card', 'summary_large_image');
-    setTwitterMeta('twitter:title', title);
-    setTwitterMeta('twitter:description', description);
-    setTwitterMeta('twitter:site', '@alzaydanintl');
-    if (ogImage) setTwitterMeta('twitter:image', ogImage);
+    setName('twitter:card',        'summary_large_image');
+    setName('twitter:site',        '@alzaydanintl');
+    setName('twitter:title',       title);
+    setName('twitter:description', description);
+    setName('twitter:image',       resolvedImage);
 
-    // ── JSON-LD Schema ─────────────────────────────────────────────────
+    // ── JSON-LD Structured Data ─────────────────────────────────────────────
     const SCHEMA_ID = 'page-jsonld';
     let scriptEl = document.getElementById(SCHEMA_ID) as HTMLScriptElement | null;
     if (schema) {
@@ -82,8 +108,8 @@ export function useSEO({ title, description, canonical, ogImage, schema }: SEOPr
     }
 
     return () => {
-      // Cleanup schema on unmount
+      // Cleanup schema on page navigation
       document.getElementById(SCHEMA_ID)?.remove();
     };
-  }, [title, description, canonical, ogImage, schema]);
+  }, [title, description, canonical, ogImage, ogType, schema]);
 }

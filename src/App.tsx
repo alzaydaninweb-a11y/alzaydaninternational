@@ -18,6 +18,10 @@ import BlogPostPage     from './pages/BlogPostPage';
 import RFQPage          from './pages/RFQPage';
 import CategoriesMobilePage from './pages/CategoriesMobilePage';
 import ScrollToTop      from './components/ScrollToTop';
+import TrafficSafetyPage        from './pages/TrafficSafetyPage';
+import ReflectiveSheetingPage   from './pages/ReflectiveSheetingPage';
+import PackagingMaterialsPage   from './pages/PackagingMaterialsPage';
+import RoadSafetyPage           from './pages/RoadSafetyPage';
 
 import { CartProvider }  from './context/CartContext';
 import { StoreProvider } from './context/StoreContext';
@@ -147,6 +151,11 @@ export default function App() {
                 <Route path="blog"          element={<BlogPage />} />
                 <Route path="blog/:slug"    element={<BlogPostPage />} />
                 <Route path="rfq"           element={<RFQPage />} />
+                {/* SEO keyword landing pages */}
+                <Route path="traffic-safety-equipment-uae"   element={<TrafficSafetyPage />} />
+                <Route path="road-safety-products-uae"       element={<RoadSafetyPage />} />
+                <Route path="reflective-sheeting-uae"        element={<ReflectiveSheetingPage />} />
+                <Route path="packaging-materials-supplier-uae" element={<PackagingMaterialsPage />} />
                 <Route path="*"             element={<Home />} />
               </Route>
             </Routes>

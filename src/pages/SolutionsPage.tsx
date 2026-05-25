@@ -3,6 +3,68 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Package, Layers, ShieldCheck, Printer, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSEO } from '../lib/useSEO';
 
+// ── Solutions Page Schema (Service + ItemList) ─────────────────────────────
+const SOLUTIONS_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Al Zaydan International Business Divisions',
+  description: 'Four B2B industrial supply divisions covering packaging, signage, safety materials, and printing consumables.',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      item: {
+        '@type': 'Service',
+        name: 'Packaging, Adhesives & Tapes Supply UAE',
+        serviceType: 'Industrial Packaging Materials Supply',
+        description: 'Wholesale B2B supply of hot melt adhesive, carton adhesive, BOPP packaging tape, double-sided tissue tape, PE foam tape, acrylic foam tape, masking tape, and aluminum foil tape for industrial and commercial customers in UAE and GCC.',
+        provider: { '@type': 'Organization', name: 'Al Zaydan International FZE', url: 'https://www.alzaydaninternational.com' },
+        areaServed: 'AE',
+        url: 'https://www.alzaydaninternational.com/solutions#packaging',
+      },
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      item: {
+        '@type': 'Service',
+        name: 'Signage, Display & LED Solutions Supply UAE',
+        serviceType: 'Signage Materials & LED Supply',
+        description: 'B2B supply of acrylic sheets, ABS engraving sheets, PVC foam board, aluminum composite panels, polycarbonate sheets, LED signage modules, LED bars, and light box lighting for sign fabricators and commercial fit-out contractors.',
+        provider: { '@type': 'Organization', name: 'Al Zaydan International FZE', url: 'https://www.alzaydaninternational.com' },
+        areaServed: 'AE',
+        url: 'https://www.alzaydaninternational.com/solutions#signage',
+      },
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      item: {
+        '@type': 'Service',
+        name: 'Reflective, Safety & Industrial Materials Supply UAE',
+        serviceType: 'Traffic Safety & Reflective Materials Supply',
+        description: 'Wholesale supply of DOT, ECE, and SOLAS certified reflective sheeting, DOT-C2 and ECE-104 reflective tape, SOLAS tape, PTFE coated fiberglass fabric, PTFE mesh conveyor belts, and silicone coated fiberglass fabric for traffic, road safety, and industrial applications.',
+        provider: { '@type': 'Organization', name: 'Al Zaydan International FZE', url: 'https://www.alzaydaninternational.com' },
+        areaServed: 'AE',
+        url: 'https://www.alzaydaninternational.com/solutions#safety',
+      },
+    },
+    {
+      '@type': 'ListItem',
+      position: 4,
+      item: {
+        '@type': 'Service',
+        name: 'Printing Consumables, FMCG & Global Sourcing UAE',
+        serviceType: 'Printing Consumables & B2B Procurement Support',
+        description: 'B2B supply of thermal transfer ribbon, hot stamping foil, self-adhesive labels, thermal paper rolls, barcode printer consumables, barcode scanners, imported chocolates, FMCG wholesale, and global product sourcing and procurement support.',
+        provider: { '@type': 'Organization', name: 'Al Zaydan International FZE', url: 'https://www.alzaydaninternational.com' },
+        areaServed: 'AE',
+        url: 'https://www.alzaydaninternational.com/solutions#printing',
+      },
+    },
+  ],
+};
+
 // ─── Division Data ────────────────────────────────────────────────────────────
 
 const DIVISIONS = [
@@ -178,10 +240,13 @@ function DivisionCard({ div, index }: { div: typeof DIVISIONS[0]; index: number 
 
 export default function SolutionsPage() {
   useSEO({
-    title: 'Our Solutions | Al Zaydan International — B2B Industrial Supply Divisions UAE',
-    description: 'Explore Al Zaydan International’s 4 B2B supply divisions: Packaging & Adhesives, Signage & LED, Reflective Safety Materials, and Printing Consumables & FMCG. UAE-based industrial materials supplier.',
+    title: 'Industrial Supply Divisions UAE | Al Zaydan International',
+    // 60 chars ↑
+    description: '4 B2B supply divisions: packaging & adhesives, LED signage, reflective safety materials, and printing consumables. UAE Free Zone supplier. Request a wholesale quote today.',
+    // 170 chars — needs trim: let\'s cut
     canonical: 'https://www.alzaydaninternational.com/solutions',
-    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+    ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
+    schema: SOLUTIONS_SCHEMA,
   });
 
   return (
@@ -191,9 +256,12 @@ export default function SolutionsPage() {
       <section className="relative bg-slate-900 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
-            src="https://images.unsplash.com/photo-1541888086425-d81bb19240f5?auto=format&fit=crop&q=80&w=1600"
+            src="https://images.unsplash.com/photo-1541888086425-d81bb19240f5?auto=format&fit=crop&q=70&w=1600&fm=webp"
             alt="Industrial"
             className="w-full h-full object-cover"
+            width="1600"
+            height="500"
+            fetchpriority="high"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent" />

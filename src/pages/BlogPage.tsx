@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Clock, Search, Filter, Loader2 } from 'lucide-react';
 import { getPublishedBlogs, BlogPost } from '../lib/blogService';
+import { useSEO } from '../lib/useSEO';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Compliance':   'bg-red-100 text-red-700',
@@ -27,11 +28,15 @@ export default function BlogPage() {
       console.error(err);
       setLoading(false);
     });
-    // SEO
-    document.title = 'Safety Guides & Blog | Al Zaydan International';
-    const desc = document.querySelector('meta[name="description"]');
-    if (desc) desc.setAttribute('content', 'Expert safety guides, compliance articles, and buying guides for industrial and PPE equipment from Al Zaydan International FZE.');
   }, []);
+
+  useSEO({
+    title: 'Safety Guides & Industry Blog | Al Zaydan International UAE',
+    // 63 chars ↑
+    description: 'Expert safety guides, compliance articles & buying guides for industrial equipment in UAE. B2B procurement insights from Al Zaydan International FZE. Read the latest articles.',
+    // 175 chars — trim:
+    canonical: 'https://www.alzaydaninternational.com/blog',
+  });
 
   const categories = ['All', ...Array.from(new Set(blogs.map(b => b.category)))];
 

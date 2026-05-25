@@ -4,6 +4,7 @@ import { ArrowLeft, Clock, Calendar, User, Tag, BookOpen, Loader2, ArrowRight, S
 import { getBlogBySlug, getPublishedBlogs, BlogPost } from '../lib/blogService';
 import { useStore, Product } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
+import { useSEO } from '../lib/useSEO';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Compliance':   'bg-red-100 text-red-700',
@@ -50,12 +51,7 @@ export default function BlogPostPage() {
       if (!found || !found.published) { setNotFound(true); setLoading(false); return; }
       setBlog(found);
 
-      // SEO meta tags
-      document.title = found.metaTitle || `${found.title} | Al Zaydan International`;
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', found.metaDescription || found.excerpt);
-
-      // OG tags
+      // SEO meta tags (title + description set via useSEO below; OG tags updated here)
       const setOG = (prop: string, val: string) => {
         let el = document.querySelector(`meta[property="${prop}"]`) as HTMLMetaElement | null;
         if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
@@ -65,6 +61,7 @@ export default function BlogPostPage() {
       setOG('og:description', found.metaDescription || found.excerpt);
       setOG('og:image',       found.coverImage);
       setOG('og:type',        'article');
+      setOG('og:url',         `https://www.alzaydaninternational.com/blog/${found.slug}`);
 
       // Related posts (same category, excluding current)
       const all = await getPublishedBlogs();
@@ -72,6 +69,14 @@ export default function BlogPostPage() {
       setLoading(false);
     });
   }, [slug]);
+
+  // Dynamic canonical + title/description — updates whenever blog state changes
+  useSEO({
+    title:       blog ? (blog.metaTitle || `${blog.title} | Al Zaydan International`) : 'Loading… | Al Zaydan International',
+    description: blog ? (blog.metaDescription || blog.excerpt) : '',
+    canonical:   blog ? `https://www.alzaydaninternational.com/blog/${blog.slug}` : 'https://www.alzaydaninternational.com/blog',
+    ogImage:     blog?.coverImage,
+  });
 
   if (loading) {
     return (

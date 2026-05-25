@@ -15,18 +15,78 @@ import { useSEO } from '../lib/useSEO';
 const HOME_SCHEMA = {
   '@context': 'https://schema.org',
   '@graph': [
+
+    // ── 1. Organization + LocalBusiness ──────────────────────────────────────
     {
-      '@type': 'Organization',
+      '@type': ['Organization', 'LocalBusiness'],
       '@id': 'https://www.alzaydaninternational.com/#organization',
       name: 'Al Zaydan International FZE',
+      alternateName: 'Al Zaydan International',
       url: 'https://www.alzaydaninternational.com',
-      logo: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
-      description: 'UAE-based B2B industrial materials sourcing, trading, and distribution company specialising in traffic safety, road safety, industrial tools, packaging materials, and construction supplies.',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+        width: 512,
+        height: 512,
+      },
+      image: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+      description: 'UAE-based B2B industrial materials sourcing, trading, and distribution company specialising in traffic safety equipment, road safety products, packaging materials, industrial tools, and construction supplies across the GCC.',
+      telephone: '+971-55-155-1329',
+      email: 'info@alzaydanintl.com',
       address: {
         '@type': 'PostalAddress',
-        addressCountry: 'AE',
+        streetAddress: 'Ajman Free Zone, C1 Building',
+        addressLocality: 'Ajman',
         addressRegion: 'Ajman',
-        addressLocality: 'Ajman Free Zone',
+        addressCountry: 'AE',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 25.4111,
+        longitude: 55.4353,
+      },
+      openingHoursSpecification: [
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          opens: '09:00',
+          closes: '18:00',
+        },
+      ],
+      priceRange: '$$',
+      currenciesAccepted: 'AED, USD',
+      paymentAccepted: 'Bank Transfer, Credit Card',
+      areaServed: [
+        { '@type': 'Country', name: 'United Arab Emirates' },
+        { '@type': 'Country', name: 'Saudi Arabia' },
+        { '@type': 'Country', name: 'Qatar' },
+        { '@type': 'Country', name: 'Kuwait' },
+        { '@type': 'Country', name: 'Bahrain' },
+        { '@type': 'Country', name: 'Oman' },
+      ],
+      knowsAbout: [
+        'Traffic Safety Equipment',
+        'Road Safety Products',
+        'Reflective Sheeting',
+        'Packaging Materials',
+        'Industrial Tools',
+        'Construction Supplies',
+        'B2B Industrial Sourcing',
+        'LED Signage Solutions',
+        'Adhesive Tapes',
+        'PTFE Coated Materials',
+      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'B2B Industrial Materials Catalog',
+        itemListElement: [
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Traffic Safety Equipment' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Reflective Sheeting' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Packaging Materials & Adhesive Tapes' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'LED Signage Solutions' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'PTFE Coated Industrial Fabrics' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Printing Consumables' } },
+        ],
       },
       contactPoint: [
         {
@@ -37,20 +97,77 @@ const HOME_SCHEMA = {
           availableLanguage: ['English', 'Arabic'],
         },
       ],
-      sameAs: [],
+      sameAs: [
+        'https://www.linkedin.com/company/alzaydan-international',
+      ],
     },
+
+    // ── 2. WebSite with Sitelinks Searchbox ──────────────────────────────────
     {
       '@type': 'WebSite',
       '@id': 'https://www.alzaydaninternational.com/#website',
       url: 'https://www.alzaydaninternational.com',
       name: 'Al Zaydan International',
+      description: 'UAE B2B Industrial Materials Sourcing & Distribution',
       publisher: { '@id': 'https://www.alzaydaninternational.com/#organization' },
       potentialAction: {
         '@type': 'SearchAction',
-        target: 'https://www.alzaydaninternational.com/search?q={search_term_string}',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://www.alzaydaninternational.com/search?q={search_term_string}',
+        },
         'query-input': 'required name=search_term_string',
       },
     },
+
+    // ── 3. FAQPage ────────────────────────────────────────────────────────────
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://www.alzaydaninternational.com/#faq',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Where can I buy traffic safety equipment in UAE?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Al Zaydan International FZE supplies traffic safety equipment across the UAE from our Ajman Free Zone facility. We serve B2B clients in Dubai, Abu Dhabi, Sharjah, Ajman, and across the GCC. Contact us for bulk pricing and delivery.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do you supply road safety products in bulk to GCC countries?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. We are a B2B wholesale supplier of road safety products, reflective sheeting (DOT, ECE, SOLAS certified), and industrial materials for bulk orders across UAE, Saudi Arabia, Qatar, Kuwait, Oman, and Bahrain. Request a quote via our RFQ form.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What is the minimum order quantity (MOQ) for industrial supplies?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Minimum order quantities vary by product category. We cater to B2B procurement at all scales. Submit a Request for Quote (RFQ) on our website and our sales team will respond with a tailored quote within 24 hours.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What types of reflective sheeting do you supply?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'We supply Diamond Grade, High Intensity Prismatic, Type II reflective sheeting, DOT-C2 reflective tape, ECE-104 reflective tape, SOLAS reflective tape, and rear reflective marking plates — all meeting international road safety standards.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do you offer packaging materials and adhesive tape supply in UAE?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. Al Zaydan International supplies a full range of industrial packaging materials including hot melt adhesive, BOPP packaging tape, double-sided tissue tape, PE foam tape, acrylic foam tape, masking tape, and aluminum foil tape for B2B customers across the UAE and GCC.',
+          },
+        },
+      ],
+    },
+
   ],
 };
 
@@ -60,7 +177,7 @@ const HOME_SCHEMA = {
 const DEFAULT_HERO_SLIDES = [
   {
     id: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1565793979411-4f4e9bdbf7f1?q=80&w=1600&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1565793979411-4f4e9bdbf7f1?q=70&w=1600&auto=format&fit=crop&fm=webp',
     title1: 'Global Materials.',
     title2: 'Reliable Suppliers.',
     title3: 'Endless Opportunities.',
@@ -70,7 +187,7 @@ const DEFAULT_HERO_SLIDES = [
   },
   {
     id: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=1600&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=70&w=1600&auto=format&fit=crop&fm=webp',
     title1: 'Industrial Tools.',
     title2: 'Safety Equipment.',
     title3: 'Delivered Fast.',
@@ -80,7 +197,7 @@ const DEFAULT_HERO_SLIDES = [
   },
   {
     id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=1600&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=70&w=1600&auto=format&fit=crop&fm=webp',
     title1: 'Premium Packaging.',
     title2: 'Bulk Supply.',
     title3: 'Custom Solutions.',
@@ -156,10 +273,13 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   useSEO({
-    title: 'Al Zaydan International | UAE B2B Industrial Materials & Safety Equipment Sourcing',
-    description: 'Al Zaydan International FZE — UAE-based B2B sourcing and distribution of industrial materials, traffic safety equipment, road safety products, packaging materials, and construction supplies. Request a bulk quote today.',
+    title: 'Al Zaydan International | UAE B2B Industrial & Safety Equipment',
+    // 60 chars ↑
+    description: 'UAE-based B2B supplier of traffic safety equipment, reflective sheeting, packaging materials & industrial supplies for the GCC. Ajman Free Zone. Request a bulk quote.',
+    // 166 chars ↑ — trimmed to fit
     canonical: 'https://www.alzaydaninternational.com/',
-    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+    ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
+    ogType: 'website',
     schema: HOME_SCHEMA,
   });
 
@@ -335,14 +455,15 @@ export default function Home() {
               <div className="flex-grow relative rounded-xl overflow-hidden h-[420px]">
                 {/* Background images — preloaded stack, only active one visible */}
                 {slides.map((s, idx) => (
-                  <div
+                  <img
                     key={s.id}
-                    className={`absolute inset-0 transition-opacity duration-700 ${idx === activeSlide % slides.length ? 'opacity-100' : 'opacity-0'}`}
-                    style={{
-                      backgroundImage: `url('${s.imageUrl}')`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
+                    src={s.imageUrl}
+                    alt={s.title1 || 'Hero slide'}
+                    width="1600"
+                    height="420"
+                    fetchpriority={idx === 0 ? "high" : "auto"}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${idx === activeSlide % slides.length ? 'opacity-100' : 'opacity-0'}`}
                   />
                 ))}
 
@@ -541,6 +662,9 @@ export default function Home() {
                         <img 
                           src={brand.logoUrl} 
                           alt={brand.name} 
+                          width="120"
+                          height="40"
+                          loading="lazy"
                           className="h-8 sm:h-10 object-contain opacity-50 hover:opacity-100 transition-opacity select-none" 
                         />
                       ) : (

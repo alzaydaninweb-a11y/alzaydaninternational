@@ -2,10 +2,19 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Grid } from 'lucide-react';
 import { useStore, Product } from '../context/StoreContext';
+import { useSEO } from '../lib/useSEO';
 
 export default function CategoriesMobilePage() {
   const { categories, categoryImages, products } = useStore();
   const navigate = useNavigate();
+
+  useSEO({
+    title: 'All Product Categories | Al Zaydan International UAE',
+    // 55 chars ↑
+    description: 'Browse all B2B industrial product categories at Al Zaydan International — traffic safety, packaging, reflective materials & tools. Bulk orders for UAE & GCC.',
+    // 158 chars ↑
+    canonical: 'https://www.alzaydaninternational.com/search',
+  });
 
   return (
     <div className="flex-1 bg-gray-50 min-h-[calc(100vh-140px)]">

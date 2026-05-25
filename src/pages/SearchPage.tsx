@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import ProductListingGrid from '../components/home/ProductListingGrid';
 import { Filter, X, ChevronDown, ChevronUp, SlidersHorizontal, RotateCcw, Check } from 'lucide-react';
+import { useSEO } from '../lib/useSEO';
 
 
 
@@ -89,6 +90,18 @@ export default function SearchPage() {
   const activeFilterCount =
     (selCategory ? 1 : 0) +
     selBrands.length;
+
+  // Canonical always points to /search (without query params) to avoid
+  // duplicate content from filter/search combinations.
+  useSEO({
+    title: searchQuery
+      ? `"${searchQuery}" | Al Zaydan International — UAE Industrial`
+      : selCategory
+        ? `${selCategory} Supplier UAE | Al Zaydan International`
+        : 'Browse All Products | Al Zaydan International UAE',
+    description: 'Browse & filter B2B industrial products — traffic safety equipment, packaging materials, reflective sheeting & construction supplies. Bulk orders for UAE & GCC. Request a quote.',
+    canonical: 'https://www.alzaydaninternational.com/search',
+  });
 
   const clearAll = useCallback(() => {
     setSelCategory('');

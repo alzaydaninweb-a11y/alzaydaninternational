@@ -45,56 +45,56 @@ const TRENDING_PRODUCTS: TrendingProduct[] = [
     badge: 'Most Requested', badgeColor: 'bg-red-500',
     demandBar: 92,
     query: 'Reflective Road Tape',
-    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp2', name: 'Industrial Adhesive', category: 'Adhesives & Sealants',
     badge: 'High Demand', badgeColor: 'bg-orange-500',
     demandBar: 86,
     query: 'Industrial Adhesive',
-    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp3', name: 'Barcode Ribbon', category: 'Printing Supplies',
     badge: 'Bulk Trending', badgeColor: 'bg-blue-600',
     demandBar: 81,
     query: 'Barcode Ribbon',
-    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp4', name: 'Safety Labels', category: 'Industrial Labels',
     badge: 'Popular in GCC', badgeColor: 'bg-emerald-600',
     demandBar: 78,
     query: 'Safety Labels',
-    imageUrl: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp5', name: 'Solar Warning Lights', category: 'Solar Equipment',
     badge: 'Export Ready', badgeColor: 'bg-amber-500',
     demandBar: 74,
     query: 'Solar Warning Lights',
-    imageUrl: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp6', name: 'Thermal Transfer Ribbon', category: 'Printing Supplies',
     badge: 'Bulk Trending', badgeColor: 'bg-blue-600',
     demandBar: 70,
     query: 'Thermal Transfer Ribbon',
-    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp7', name: 'PVC Adhesive Tape', category: 'Adhesive Tapes',
     badge: 'High Demand', badgeColor: 'bg-orange-500',
     demandBar: 67,
     query: 'PVC Adhesive Tape',
-    imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=120&h=120&fit=crop&q=70&fm=webp',
   },
   {
     id: 'tp8', name: 'Safety Helmets GCC', category: 'Safety Gear',
     badge: 'Popular in GCC', badgeColor: 'bg-emerald-600',
     demandBar: 64,
     query: 'Safety Helmets',
-    imageUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=120&h=120&fit=crop&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=120&h=120&fit=crop&q=70&fm=webp',
   },
 ];
 
@@ -158,6 +158,9 @@ function TrendingProductCard({ item, onClick }: { item: TrendingProduct; onClick
           <img
             src={item.imageUrl}
             alt={item.name}
+            loading="lazy"
+            width="48"
+            height="48"
             onError={() => setImgErr(true)}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />

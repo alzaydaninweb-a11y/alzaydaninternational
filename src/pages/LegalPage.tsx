@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FileText, Shield, Cookie, ChevronRight } from 'lucide-react';
+import { useSEO } from '../lib/useSEO';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,14 @@ export default function LegalPage() {
   const termsRef  = useRef<HTMLDivElement>(null);
   const privacyRef = useRef<HTMLDivElement>(null);
   const cookiesRef = useRef<HTMLDivElement>(null);
+
+  useSEO({
+    title: 'Legal & Privacy Policy | Al Zaydan International UAE',
+    // 55 chars ↑
+    description: 'Terms of Sale, Privacy Policy & Cookie Preferences for Al Zaydan International FZE — UAE B2B industrial materials supplier. Review our full legal terms.',
+    // 152 chars ↑
+    canonical: 'https://www.alzaydaninternational.com/legal',
+  });
 
   const refs: Record<string, React.RefObject<HTMLDivElement>> = {
     terms: termsRef, privacy: privacyRef, cookies: cookiesRef,

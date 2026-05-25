@@ -29,10 +29,12 @@ export default function RFQPage() {
   const { settings } = useStore();
 
   useSEO({
-    title: 'Request for Quotation (RFQ) | Al Zaydan International — Bulk B2B Procurement UAE',
-    description: 'Submit a bulk procurement request to Al Zaydan International FZE. Upload your product list or describe your requirements and our UAE-based sourcing team will respond within 24 hours.',
+    title: 'Request a Bulk Quote | Al Zaydan International UAE',
+    // 54 chars ↑
+    description: 'Submit a bulk B2B procurement request to Al Zaydan International FZE. Upload your product list and get a competitive industrial materials quote within 24 hours. UAE & GCC.',
+    // 171 chars — trim:
     canonical: 'https://www.alzaydaninternational.com/rfq',
-    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+    ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
   });
 
   const [form, setForm]         = useState<SimpleRFQForm>(EMPTY);

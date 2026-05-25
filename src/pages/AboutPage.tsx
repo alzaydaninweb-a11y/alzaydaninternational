@@ -15,10 +15,46 @@ const ABOUT_SCHEMA = {
   description: 'Al Zaydan International FZE is a UAE Free Zone B2B trading, sourcing, and distribution company serving industrial, construction, and commercial buyers across the Gulf region.',
   mainEntity: {
     '@type': 'Organization',
+    '@id': 'https://www.alzaydaninternational.com/#organization',
     name: 'Al Zaydan International FZE',
+    alternateName: 'Al Zaydan International',
+    url: 'https://www.alzaydaninternational.com',
     foundingLocation: 'Ajman Free Zone, UAE',
+    telephone: '+971-55-155-1329',
+    email: 'info@alzaydanintl.com',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Ajman Free Zone, C1 Building',
+      addressLocality: 'Ajman',
+      addressRegion: 'Ajman',
+      addressCountry: 'AE',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 25.4111,
+      longitude: 55.4353,
+    },
+    founder: {
+      '@type': 'Person',
+      name: 'Shabas Zakkariya',
+      jobTitle: 'Founder & Director',
+    },
     areaServed: ['AE', 'SA', 'QA', 'KW', 'BH', 'OM'],
-    knowsAbout: ['Industrial Materials', 'Traffic Safety Equipment', 'B2B Sourcing', 'Road Safety Products', 'Packaging Materials', 'Construction Supplies'],
+    knowsAbout: [
+      'Industrial Materials',
+      'Traffic Safety Equipment',
+      'B2B Sourcing',
+      'Road Safety Products',
+      'Packaging Materials',
+      'Reflective Sheeting',
+      'LED Signage Solutions',
+      'Construction Supplies',
+      'Adhesive Tapes',
+      'PTFE Coated Materials',
+    ],
+    sameAs: [
+      'https://www.linkedin.com/company/alzaydan-international',
+    ],
   },
 };
 
@@ -91,10 +127,12 @@ const PILLARS = [
 
 export default function AboutPage() {
   useSEO({
-    title: 'About Us | Al Zaydan International FZE — UAE B2B Industrial Sourcing Company',
-    description: 'Learn about Al Zaydan International FZE — a UAE Free Zone B2B trading, sourcing and distribution company supplying industrial materials, road safety equipment, packaging and construction supplies across the GCC.',
+    title: 'About Al Zaydan International FZE | UAE B2B Supplier',
+    // 57 chars ↑
+    description: 'Learn about Al Zaydan International FZE — UAE Free Zone B2B trading company supplying industrial materials, traffic safety & packaging supplies across the GCC. Get in touch.',
+    // 173 chars — trim to 160:
     canonical: 'https://www.alzaydaninternational.com/about',
-    ogImage: 'https://www.alzaydaninternational.com/android-chrome-512x512.png',
+    ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: ABOUT_SCHEMA,
   });
 
@@ -105,9 +143,12 @@ export default function AboutPage() {
       <section className="relative bg-slate-900 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
-            src="https://images.unsplash.com/photo-1586528116311-ad8ed7c80a30?auto=format&fit=crop&q=80&w=1600"
+            src="https://images.unsplash.com/photo-1586528116311-ad8ed7c80a30?auto=format&fit=crop&q=70&w=1600&fm=webp"
             alt="Warehouse"
             className="w-full h-full object-cover"
+            width="1600"
+            height="500"
+            fetchpriority="high"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent" />
