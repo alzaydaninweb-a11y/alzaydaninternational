@@ -273,10 +273,8 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   useSEO({
-    title: 'Al Zaydan International | UAE B2B Industrial & Safety Equipment',
-    // 60 chars ↑
-    description: 'UAE-based B2B supplier of traffic safety equipment, reflective sheeting, packaging materials & industrial supplies for the GCC. Ajman Free Zone. Request a bulk quote.',
-    // 166 chars ↑ — trimmed to fit
+    title: 'Al Zaydan | UAE B2B Industrial Supplies',
+    description: 'UAE B2B supplier of traffic safety, packaging & industrial supplies for GCC. Ajman Free Zone company. Request a wholesale quote today.',
     canonical: 'https://www.alzaydaninternational.com/',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     ogType: 'website',

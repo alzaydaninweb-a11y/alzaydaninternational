@@ -65,7 +65,6 @@ export default function TrafficSafetyPage() {
         <div className="absolute inset-0 opacity-25">
           <img
             src="https://images.unsplash.com/photo-1541888081198-a0e2dc113ea4?auto=format&fit=crop&q=70&w=1600&fm=webp"
-            src="https://images.unsplash.com/photo-1541888081198-a0e2dc113ea4?auto=format&fit=crop&q=70&w=1600&fm=webp"
             alt="Traffic safety cones supplier UAE - Al Zaydan International"
             className="w-full h-full object-cover"
             width="1600"
