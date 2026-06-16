@@ -4,10 +4,12 @@ import WhatsAppIcon from '../icons/WhatsAppIcon';
 
 export default function FloatingWhatsApp() {
   const { settings } = useStore();
-  const defaultWa = settings?.orderWhatsAppNumber || '971501234567';
+  const defaultWa = settings?.orderWhatsAppNumber || settings?.phoneNumber?.replace(/\D/g, '') || '';
   const rawNumber = settings?.whatsappRouting?.contact || defaultWa;
   const number = rawNumber.replace(/\D/g, '');
-  const url = `https://wa.me/${number}?text=Hello%2C%20I%20would%20like%20to%20inquire%20about%20your%20products%20and%20bulk%20pricing.`;
+  const url = number
+    ? `https://wa.me/${number}?text=Hello%2C%20I%20would%20like%20to%20inquire%20about%20your%20products%20and%20bulk%20pricing.`
+    : '#';
 
   return (
     <a

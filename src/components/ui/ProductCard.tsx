@@ -77,12 +77,12 @@ export default function ProductCard({ product, compact = false }: Props) {
   /* WhatsApp */
   const defaultNumber = settings?.orderWhatsAppNumber
     || settings?.phoneNumber?.replace(/\D/g, '')
-    || '971501234567';
+    || '';
   const waNumber = settings?.whatsappRouting?.product || defaultNumber;
   const waMsg = encodeURIComponent(
     `Hi, I'm interested in: ${product.name}. Please send me pricing & MOQ details.`
   );
-  const waUrl = `https://wa.me/${waNumber}?text=${waMsg}`;
+  const waUrl = waNumber ? `https://wa.me/${waNumber.replace(/\D/g, '')}?text=${waMsg}` : '#';
 
   /* Cart */
   const handleAdd = (e: React.MouseEvent) => {

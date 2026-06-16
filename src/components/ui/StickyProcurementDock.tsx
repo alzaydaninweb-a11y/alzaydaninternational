@@ -192,10 +192,12 @@ export default function StickyProcurementDock() {
 
   const defaultWa = settings?.orderWhatsAppNumber
     || settings?.phoneNumber?.replace(/\D/g, '')
-    || '971501234567';
+    || '';
   const waNumber = settings?.whatsappRouting?.procurement || defaultWa;
-  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent('Hi, I have a bulk procurement inquiry. Please assist.')}`;
-  const callNumber = settings?.phoneNumber || settings?.phones?.[0]?.value || '+971501234567';
+  const waUrl = waNumber 
+    ? `https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I have a bulk procurement inquiry. Please assist.')}`
+    : '#';
+  const callNumber = settings?.callRouting?.procurement || settings?.phoneNumber || settings?.phones?.[0]?.value || '';
 
   /* Show dock after 200px scroll */
   useEffect(() => {

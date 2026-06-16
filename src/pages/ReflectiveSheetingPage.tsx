@@ -33,7 +33,15 @@ const REFLECTIVE_SCHEMA = {
 };
 
 export default function ReflectiveSheetingPage() {
-  const { products } = useStore();
+  const { products, settings } = useStore();
+
+  const defaultNumber = settings?.orderWhatsAppNumber
+    || settings?.phoneNumber?.replace(/\D/g, '')
+    || '';
+  const waNumber = settings?.whatsappRouting?.rfq || defaultNumber;
+  const waUrl = waNumber
+    ? `https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodeURIComponent('Hi, I am interested in reflective sheeting. Please assist.')}`
+    : '#';
 
   useSEO({
     title: 'Reflective Sheeting Supplier UAE | Al Zaydan International FZE',
@@ -133,7 +141,7 @@ export default function ReflectiveSheetingPage() {
               <Link to="/rfq" className="flex items-center justify-center gap-2 w-full bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold py-3.5 rounded-xl transition-colors text-sm">
                 <Package className="w-4 h-4" /> Submit RFQ Online
               </Link>
-              <a href="https://wa.me/971551551329" className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3.5 rounded-xl transition-colors text-sm">
+              <a href={waUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3.5 rounded-xl transition-colors text-sm">
                 <MessageCircle className="w-4 h-4" /> WhatsApp Our Team
               </a>
             </div>

@@ -82,6 +82,7 @@ export type GeneralSettings = {
   heroSlides?: { id: string; imageUrl: string; title1?: string; title2?: string; title3?: string; sub?: string; cta1Label?: string; cta1To?: string; cta2Label?: string; cta2To?: string; }[];
   // WhatsApp Call Routing
   whatsappRouting?: Record<string, string>;
+  callRouting?: Record<string, string>;
   // Expert Contact Profile
   expertProfile?: {
     active: boolean;

@@ -6,10 +6,12 @@ import { useStore } from '../../context/StoreContext';
 
 export default function B2BInquiryStrip() {
   const { settings } = useStore();
-  const defaultWa = settings?.orderWhatsAppNumber || '971501234567';
+  const defaultWa = settings?.orderWhatsAppNumber || settings?.phoneNumber?.replace(/\D/g, '') || '';
   const whatsappNumber = settings?.whatsappRouting?.procurement || defaultWa;
   const cleanNumber = whatsappNumber.replace(/\D/g, '');
-  const whatsappUrl = `https://wa.me/${cleanNumber}?text=Hello%2C%20I%20am%20a%20B2B%20buyer%20interested%20in%20bulk%20pricing%20and%20procurement%20support.`;
+  const whatsappUrl = cleanNumber
+    ? `https://wa.me/${cleanNumber}?text=Hello%2C%20I%20am%20a%20B2B%20buyer%20interested%20in%20bulk%20pricing%20and%20procurement%20support.`
+    : '#';
 
   return (
     <div className="bg-[#0d1b2a] border-b border-[#1e3a5f]">
