@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "postbuild": "node scripts/generate-sitemap.cjs",
+    "postbuild": "node scripts/generate-sitemap.cjs && node scripts/prerender.cjs",
     "sitemap": "node scripts/generate-sitemap.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",

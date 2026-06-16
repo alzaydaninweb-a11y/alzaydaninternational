@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, Save, Phone, MapPin, Mail, Instagram, Facebook, Linkedin, Youtube, Twitter, Image as ImageIcon, Plus, X, Users, Trash2, Shield, Layout, Upload, Loader } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Settings, Save, Phone, MapPin, Mail, Instagram, Facebook, Linkedin, Youtube, Twitter, Image as ImageIcon, Plus, X, Users, Trash2, Shield, Layout, Upload, Loader, ArrowRight, MessageCircle } from 'lucide-react';
 import WhatsAppIcon from '../../components/icons/WhatsAppIcon';
 import { useStore } from '../../context/StoreContext';
 import { uploadToR2 } from '../../lib/cloudflareR2';
@@ -724,6 +725,68 @@ export default function AdminSettings() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* WhatsApp & Call Buttons */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-5 border-b border-gray-100 bg-slate-50 flex items-center justify-between">
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-800 flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-green-600" />
+                WhatsApp & Call Button Numbers
+              </h2>
+              <p className="text-[13px] text-slate-500 mt-0.5">Default numbers for WhatsApp chat and phone call buttons across the site.</p>
+            </div>
+          </div>
+          <div className="p-6 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Default WhatsApp Number */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                  <MessageCircle className="w-3.5 h-3.5 text-green-600" /> Default WhatsApp Number
+                </label>
+                <input
+                  type="text"
+                  name="orderWhatsAppNumber"
+                  value={form.orderWhatsAppNumber || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. +971 52 987 1369"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 bg-slate-50/50"
+                />
+                <p className="text-[11px] text-slate-400 px-1">This number is used for the floating WhatsApp button and as a fallback across all pages.</p>
+              </div>
+
+              {/* Default Call Number */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-amber-600" /> Default Call Number
+                </label>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={form.phoneNumber || ''}
+                  onChange={handleChange}
+                  placeholder="e.g. +971 55 155 1329"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 bg-slate-50/50"
+                />
+                <p className="text-[11px] text-slate-400 px-1">This is the primary phone number used for the call button in the procurement dock.</p>
+              </div>
+            </div>
+
+            {/* Link to advanced routing */}
+            <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[13px] font-bold text-slate-700">Need per-page routing?</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">Route different pages to different WhatsApp / call numbers (e.g. RFQ to one team, Contact page to another).</p>
+              </div>
+              <Link
+                to="/admin/support"
+                className="shrink-0 ml-4 flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl text-[12px] transition-colors shadow-sm"
+              >
+                Advanced Routing <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>

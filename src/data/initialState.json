@@ -3,7 +3,7 @@
     "homepageHeroBgVideo": "https://videos.pexels.com/video-files/5698647/5698647-hd_1920_1080_30fps.mp4",
     "homepageHeroMainImage": "",
     "address": "Ajman Freezone C1 Building, Ajman",
-    "orderWhatsAppNumber": "+971 52 987 1369",
+    "orderWhatsAppNumber": "",
     "homepageHeroSecondaryImage": "",
     "googleMapsUrl": "",
     "marketingCampaign": {
@@ -91,24 +91,19 @@
     "xUrl": "",
     "facebookUrl": "https://www.facebook.com/share/1D1xM7NYuP/",
     "emails": [],
-    "whatsappRouting": {
-      "rfq": "918289976368",
-      "contact": "918289976368",
-      "product": "918289976368",
-      "procurement": "918289976368"
-    },
+    "whatsappRouting": {},
     "linkedinUrl": "",
     "homepageHeroBgImage": "https://i.pinimg.com/736x/6e/79/0f/6e790fbd1a0166e5b40338d024628330.jpg",
     "expertProfile": {
-      "role": "Senior",
-      "name": "Ash Office",
-      "phone": "+918289976368",
+      "role": "",
+      "name": "",
+      "phone": "",
       "active": false,
-      "email": "leoan.studio@gmail.com",
-      "whatsapp": "+918289976368",
-      "photoUrl": "https://pub-7ee997edc0944df3b82d8c4cec4131a1.r2.dev/expert/1779358559158_glro8xa.jpeg"
+      "email": "",
+      "whatsapp": "",
+      "photoUrl": ""
     },
-    "phoneNumber": "+918289976368",
+    "phoneNumber": "",
     "phones": [
       {
         "label": "Sales team",
@@ -121,10 +116,6 @@
       {
         "value": "+971 54 168 8645",
         "label": "Customer care"
-      },
-      {
-        "value": "",
-        "label": ""
       }
     ]
   },
