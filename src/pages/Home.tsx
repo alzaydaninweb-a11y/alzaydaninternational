@@ -273,7 +273,7 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   useSEO({
-    title: 'Al Zaydan International | UAE B2B Industrial Sourcing & Distribution',
+    title: 'Al Zaydan International Trading | UAE B2B Industrial Sourcing & Distribution',
     description: 'Leading UAE B2B sourcing and distribution company. We supply wholesale traffic safety equipment, road safety products, and packaging materials across the GCC.',
     canonical: 'https://www.alzaydaninternational.com/',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
