@@ -30,10 +30,7 @@ export default function RFQPage() {
 
   useSEO({
     title: 'Request a Bulk Quote | Al Zaydan International UAE',
-    // 54 chars ↑
-    description: 'Submit a bulk B2B procurement request to Al Zaydan International FZE. Upload your product list and get a competitive industrial materials quote within 24 hours. UAE & GCC.',
-    // 171 chars — trim:
-    canonical: 'https://www.alzaydaninternational.com/rfq',
+    description: 'Submit a Request for Quotation to Al Zaydan International. Get competitive wholesale pricing on traffic safety, packaging & industrial supplies in the UAE.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
   });
 

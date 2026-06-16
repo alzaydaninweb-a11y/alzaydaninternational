@@ -99,8 +99,7 @@ export default function SearchPage() {
       : selCategory
         ? `${selCategory} Supplier UAE | Al Zaydan International`
         : 'Browse All Products | Al Zaydan International UAE',
-    description: 'Browse & filter B2B industrial products — traffic safety equipment, packaging materials, reflective sheeting & construction supplies. Bulk orders for UAE & GCC. Request a quote.',
-    canonical: 'https://www.alzaydaninternational.com/search',
+    description: 'Browse Al Zaydan\'s full product catalogue — traffic safety equipment, reflective sheeting, road marking materials, packaging supplies and more.',
   });
 
   const clearAll = useCallback(() => {

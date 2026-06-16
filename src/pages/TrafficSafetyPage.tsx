@@ -45,10 +45,7 @@ export default function TrafficSafetyPage() {
 
   useSEO({
     title: 'Traffic Safety Equipment Supplier UAE | Al Zaydan International',
-    // 66 chars ↑
-    description: 'Wholesale B2B supply of traffic safety equipment in UAE — road cones, barriers, LED signs & more. Bulk orders for GCC. Ajman Free Zone. Request a quote.',
-    // 155 chars ↑
-    canonical: 'https://www.alzaydaninternational.com/traffic-safety-equipment-uae',
+    description: 'Leading supplier of traffic safety equipment in UAE. Cones, barriers, reflective signs, road delineators and more — wholesale B2B pricing from Ajman.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: TRAFFIC_SAFETY_SCHEMA,
   });

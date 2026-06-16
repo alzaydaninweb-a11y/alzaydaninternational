@@ -61,10 +61,7 @@ export default function LegalPage() {
 
   useSEO({
     title: 'Legal & Privacy Policy | Al Zaydan International UAE',
-    // 55 chars ↑
     description: 'Terms of Sale, Privacy Policy & Cookie Preferences for Al Zaydan International FZE — UAE B2B industrial materials supplier. Review our full legal terms.',
-    // 152 chars ↑
-    canonical: 'https://www.alzaydaninternational.com/legal',
   });
 
   const refs: Record<string, React.RefObject<HTMLDivElement>> = {

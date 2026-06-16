@@ -38,10 +38,7 @@ export default function RoadSafetyPage() {
 
   useSEO({
     title: 'Road Safety Products UAE | Wholesale B2B Supplier — Al Zaydan',
-    // 64 chars ↑
-    description: 'Trusted road safety products supplier in UAE. Traffic management equipment, reflective delineators, road studs. Bulk B2B orders for Dubai, Abu Dhabi & GCC.',
-    // 156 chars ↑
-    canonical: 'https://www.alzaydaninternational.com/road-safety-products-uae',
+    description: 'Wholesale road safety products in UAE and GCC. Al Zaydan International supplies road markers, guardrails, safety signs and traffic control equipment.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: ROAD_SAFETY_SCHEMA,
   });

@@ -32,10 +32,7 @@ export default function BlogPage() {
 
   useSEO({
     title: 'Safety Guides & Industry Blog | Al Zaydan International UAE',
-    // 63 chars ↑
-    description: 'Expert safety guides, compliance articles & buying guides for industrial equipment in UAE. B2B procurement insights from Al Zaydan International FZE. Read the latest articles.',
-    // 175 chars — trim:
-    canonical: 'https://www.alzaydaninternational.com/blog',
+    description: 'Industry insights from Al Zaydan International — market trends, material prices, and updates on UAE industrial and construction sectors.',
   });
 
   const categories = ['All', ...Array.from(new Set(blogs.map(b => b.category)))];

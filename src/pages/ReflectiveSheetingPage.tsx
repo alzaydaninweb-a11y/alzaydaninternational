@@ -37,10 +37,7 @@ export default function ReflectiveSheetingPage() {
 
   useSEO({
     title: 'Reflective Sheeting Supplier UAE | Al Zaydan International FZE',
-    // 63 chars ↑
-    description: 'High-grade reflective sheeting for traffic signs, road safety & construction in UAE. B2B wholesale supply from Ajman Free Zone. DOT, ECE, SOLAS certified. GCC delivery.',
-    // 169 chars — trim ok
-    canonical: 'https://www.alzaydaninternational.com/reflective-sheeting-uae',
+    description: 'Buy reflective sheeting in UAE — Type I, Type II, and high-intensity grades. Al Zaydan International supplies reflective materials for road signs and markings.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: REFLECTIVE_SCHEMA,
   });

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 interface SEOProps {
   title: string;
   description: string;
-  canonical: string;
+  canonical?: string;
   ogImage?: string;
   ogType?: 'website' | 'article';
   schema?: object;
@@ -19,6 +19,9 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
   useEffect(() => {
     // ── Shared OG image (fallback to logo if none provided) ───────────────
     const resolvedImage = ogImage || 'https://www.alzaydaninternational.com/images/og-banner.jpg';
+    
+    // ── Dynamic Canonical URL ──────────────────────────────────────────────
+    const resolvedCanonical = canonical || `https://www.alzaydaninternational.com${window.location.pathname.replace(/\/$/, '')}`;
 
     // ── Title ──────────────────────────────────────────────────────────────
     document.title = title;
@@ -39,7 +42,7 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
       canonicalEl.rel = 'canonical';
       document.head.appendChild(canonicalEl);
     }
-    canonicalEl.href = canonical;
+    canonicalEl.href = resolvedCanonical;
 
     // ── Hreflang ───────────────────────────────────────────────────────────
     const setHreflang = (lang: string, url: string) => {
@@ -52,8 +55,8 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
       }
       el.href = url;
     };
-    setHreflang('en', canonical);
-    setHreflang('x-default', canonical);
+    setHreflang('en', resolvedCanonical);
+    setHreflang('x-default', resolvedCanonical);
     // Note: When Arabic pages are built in /ar/, add: setHreflang('ar', canonical.replace('.com/', '.com/ar/'));
 
     // ── Open Graph ─────────────────────────────────────────────────────────
@@ -68,7 +71,7 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
     };
     setMeta('og:title',       title);
     setMeta('og:description', description);
-    setMeta('og:url',         canonical);
+    setMeta('og:url',         resolvedCanonical);
     setMeta('og:type',        ogType);
     setMeta('og:site_name',   'Al Zaydan International');
     setMeta('og:image',       resolvedImage);

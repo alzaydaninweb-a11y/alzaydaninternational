@@ -127,11 +127,8 @@ const PILLARS = [
 
 export default function AboutPage() {
   useSEO({
-    title: 'About Al Zaydan International FZE | UAE B2B Supplier',
-    // 57 chars ↑
-    description: 'Learn about Al Zaydan International FZE — UAE Free Zone B2B trading company supplying industrial materials, traffic safety & packaging supplies across the GCC. Get in touch.',
-    // 173 chars — trim to 160:
-    canonical: 'https://www.alzaydaninternational.com/about',
+    title: 'About Al Zaydan International | UAE B2B Supplier',
+    description: 'Learn about Al Zaydan International FZE — an Ajman Free Zone company supplying industrial, safety and packaging materials across the UAE and GCC since establishment.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: ABOUT_SCHEMA,
   });

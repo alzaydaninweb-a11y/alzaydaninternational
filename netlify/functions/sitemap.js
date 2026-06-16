@@ -18,14 +18,17 @@ const TODAY       = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
 // ── Static routes ─────────────────────────────────────────────────────────────
 const STATIC_URLS = [
-  { path: '/',           changefreq: 'daily',   priority: '1.0' },
+  { path: '/',           changefreq: 'weekly',  priority: '1.0', isLanding: true },
+  { path: '/traffic-safety-equipment-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
+  { path: '/road-safety-products-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
+  { path: '/reflective-sheeting-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
+  { path: '/packaging-materials-supplier-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
   { path: '/about',      changefreq: 'monthly', priority: '0.8' },
   { path: '/solutions',  changefreq: 'monthly', priority: '0.8' },
   { path: '/contact',    changefreq: 'monthly', priority: '0.8' },
   { path: '/rfq',        changefreq: 'monthly', priority: '0.8' },
   { path: '/categories', changefreq: 'weekly',  priority: '0.8' },
   { path: '/blog',       changefreq: 'weekly',  priority: '0.7' },
-  { path: '/search',     changefreq: 'weekly',  priority: '0.6' },
   { path: '/legal',      changefreq: 'yearly',  priority: '0.3' },
 ];
 
@@ -77,8 +80,13 @@ async function fetchPublishedBlogSlugs() {
     .map(item => {
       const fields = item.document.fields;
       const slug   = fields.slug.stringValue;
+      
+      if (slug.length < 20 || /(-pri|-pro|-con|-ua|-sup)$/.test(slug)) {
+        console.warn(`[sitemap] Warning: Suspiciously truncated slug detected: ${slug}`);
+      }
+
       const rawDate =
-        fields.updatedAt?.stringValue ||
+        item.document.createTime ||
         fields.publishedAt?.stringValue ||
         TODAY;
       return { slug, lastmod: rawDate.split('T')[0] };
@@ -90,13 +98,21 @@ async function fetchPublishedBlogSlugs() {
 }
 
 // ── XML builder ───────────────────────────────────────────────────────────────
-function buildUrlEntry({ loc, lastmod, changefreq, priority }) {
+function buildUrlEntry({ loc, lastmod, changefreq, priority, isLanding }) {
+  let imageTag = '';
+  if (isLanding) {
+    imageTag = `
+    <image:image>
+      <image:loc>https://www.alzaydaninternational.com/images/og-banner.jpg</image:loc>
+      <image:title>Al Zaydan International — UAE B2B Industrial Supplies</image:title>
+    </image:image>`;
+  }
   return `
   <url>
     <loc>${loc}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
+    <priority>${priority}</priority>${imageTag}
   </url>`;
 }
 
@@ -107,6 +123,7 @@ function buildSitemap(blogEntries) {
       lastmod:    TODAY,
       changefreq: u.changefreq,
       priority:   u.priority,
+      isLanding:  u.isLanding,
     })
   ).join('');
 
@@ -125,6 +142,7 @@ function buildSitemap(blogEntries) {
 <!-- Al Zaydan International FZE — Dynamic XML Sitemap -->
 <!-- Generated: ${new Date().toISOString()} | Total URLs: ${totalUrls} -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">

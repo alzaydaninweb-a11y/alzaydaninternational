@@ -10,10 +10,7 @@ export default function CategoriesMobilePage() {
 
   useSEO({
     title: 'All Product Categories | Al Zaydan International UAE',
-    // 55 chars ↑
-    description: 'Browse all B2B industrial product categories at Al Zaydan International — traffic safety, packaging, reflective materials & tools. Bulk orders for UAE & GCC.',
-    // 158 chars ↑
-    canonical: 'https://www.alzaydaninternational.com/search',
+    description: 'Browse Al Zaydan\'s full product catalogue — traffic safety equipment, reflective sheeting, road marking materials, packaging supplies and more.',
   });
 
   return (

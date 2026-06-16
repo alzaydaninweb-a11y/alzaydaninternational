@@ -74,7 +74,6 @@ export default function BlogPostPage() {
   useSEO({
     title:       blog ? (blog.metaTitle || `${blog.title} | Al Zaydan International`) : 'Loading… | Al Zaydan International',
     description: blog ? (blog.metaDescription || blog.excerpt) : '',
-    canonical:   blog ? `https://www.alzaydaninternational.com/blog/${blog.slug}` : 'https://www.alzaydaninternational.com/blog',
     ogImage:     blog?.coverImage,
   });
 

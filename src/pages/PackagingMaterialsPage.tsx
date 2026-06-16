@@ -37,8 +37,7 @@ export default function PackagingMaterialsPage() {
 
   useSEO({
     title: 'Packaging Materials Supplier UAE | Bulk B2B — Al Zaydan',
-    description: 'Industrial packaging materials supplier in UAE. Bulk B2B orders for GCC — hot melt adhesive, BOPP tape, foam tapes & more. Ajman Free Zone. Request a quote.',
-    canonical: 'https://www.alzaydaninternational.com/packaging-materials-supplier-uae',
+    description: 'Bulk packaging materials supplier in UAE. Stretch film, strapping, tape, bubble wrap and industrial packaging solutions from Al Zaydan International, Ajman.',
     ogImage: 'https://www.alzaydaninternational.com/images/og-banner.jpg',
     schema: PACKAGING_SCHEMA,
   });
