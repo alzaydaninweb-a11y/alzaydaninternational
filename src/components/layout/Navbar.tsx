@@ -5,6 +5,7 @@ import {
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 import SmartSearchDropdown, {
   getRecentSearches, saveRecentSearch, removeRecentSearch
 } from '../ui/SmartSearchDropdown';
@@ -20,7 +21,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const { cartCount } = useCart();
-  const { products, categories } = useStore();
+  const { products, categories, categoryDetails } = useStore();
 
   const [searchQuery, setSearchQuery]       = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -131,11 +132,13 @@ export default function Navbar() {
   };
 
   const handleSelectProduct = useCallback((id: string) => {
-    navigate(`/product/${id}`);
+    const prod = products.find(p => p.id === id);
+    const prodSlug = prod ? (prod.slug || generateSlug(prod.name)) : id;
+    navigate(`/product/${prodSlug}`);
     setSearchQuery('');
     setShowDropdown(false);
     setFocusedIndex(-1);
-  }, [navigate]);
+  }, [navigate, products]);
 
   const handleRecentRemove = useCallback((q: string) => {
     removeRecentSearch(q);
@@ -316,16 +319,20 @@ export default function Navbar() {
                 </Link>
                 {item.dropdown && (
                   <div className="absolute top-full left-0 mt-0 w-[220px] bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 hidden group-hover:block">
-                    {categories.slice(0, 12).map(cat => (
-                      <Link
-                        key={cat}
-                        to={`/search?category=${encodeURIComponent(cat)}`}
-                        className="flex items-center justify-between px-4 py-2 text-[12.5px] text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      >
-                        <span>{cat}</span>
-                        <ChevronRight className="w-3 h-3 text-gray-300" />
-                      </Link>
-                    ))}
+                    {categories.slice(0, 12).map(cat => {
+                      const details = Object.values(categoryDetails || {}).find(c => c.name === cat);
+                      const catSlug = details?.slug || generateSlug(cat);
+                      return (
+                        <Link
+                          key={cat}
+                          to={`/category/${catSlug}`}
+                          className="flex items-center justify-between px-4 py-2 text-[12.5px] text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        >
+                          <span>{cat}</span>
+                          <ChevronRight className="w-3 h-3 text-gray-300" />
+                        </Link>
+                      );
+                    })}
                     <Link
                       to="/categories"
                       className="flex items-center justify-between px-4 py-2 text-[12px] text-blue-600 font-bold hover:bg-blue-50 transition-colors border-t border-gray-100 mt-1"
@@ -489,17 +496,21 @@ export default function Navbar() {
               {/* Categories */}
               <div className="px-4 py-2 mt-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Categories</div>
               <div className="px-2 space-y-0.5">
-                {categories.slice(0, 9).map(cat => (
-                  <Link
-                    key={cat}
-                    to={`/search?category=${encodeURIComponent(cat)}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-between px-3 py-2 rounded-md text-[13px] font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    <span>{cat}</span>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </Link>
-                ))}
+                {categories.slice(0, 9).map(cat => {
+                  const details = Object.values(categoryDetails || {}).find(c => c.name === cat);
+                  const catSlug = details?.slug || generateSlug(cat);
+                  return (
+                    <Link
+                      key={cat}
+                      to={`/category/${catSlug}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-between px-3 py-2 rounded-md text-[13px] font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      <span>{cat}</span>
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </Link>
+                  );
+                })}
                 <Link
                   to="/categories"
                   onClick={() => setIsMobileMenuOpen(false)}

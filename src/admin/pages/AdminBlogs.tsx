@@ -5,6 +5,8 @@ import {
   FileText, Globe, Clock, Search, ChevronLeft, ChevronRight, Loader2,
 } from 'lucide-react';
 import { getAllBlogs, deleteBlog, togglePublish, BlogPost } from '../../lib/blogService';
+import { updateSitemapMetadata } from '../../context/StoreContext';
+import { db } from '../../lib/firebase';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Compliance':   'bg-red-100 text-red-700',
@@ -38,6 +40,7 @@ export default function AdminBlogs() {
     if (!confirm(`Delete "${blog.title}"? This cannot be undone.`)) return;
     setDeleting(blog.id);
     await deleteBlog(blog.id);
+    await updateSitemapMetadata(db);
     setBlogs(prev => prev.filter(b => b.id !== blog.id));
     setDeleting(null);
   };
@@ -45,6 +48,7 @@ export default function AdminBlogs() {
   const handleToggle = async (blog: BlogPost) => {
     setToggling(blog.id);
     await togglePublish(blog);
+    await updateSitemapMetadata(db);
     setBlogs(prev =>
       prev.map(b => b.id === blog.id ? { ...b, published: !b.published } : b)
     );

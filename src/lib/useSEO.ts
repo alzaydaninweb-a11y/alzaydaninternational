@@ -7,15 +7,36 @@ interface SEOProps {
   ogImage?: string;
   ogType?: 'website' | 'article';
   schema?: object;
+  noIndex?: boolean;
+  noFollow?: boolean;
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
 }
 
 /**
  * useSEO — sets page-level <title>, <meta description>, <link rel="canonical">
- * og:* Open Graph, twitter:* Card, and injects/removes JSON-LD structured data.
+ * og:* Open Graph, twitter:* Card, robots, and injects/removes JSON-LD structured data.
  *
  * All props are reactive: changing any will immediately update the DOM.
  */
-export function useSEO({ title, description, canonical, ogImage, ogType = 'website', schema }: SEOProps) {
+export function useSEO({
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogType = 'website',
+  schema,
+  noIndex,
+  noFollow,
+  ogTitle,
+  ogDescription,
+  twitterTitle,
+  twitterDescription,
+  twitterImage,
+}: SEOProps) {
   useEffect(() => {
     // ── Shared OG image (fallback to logo if none provided) ───────────────
     const resolvedImage = ogImage || 'https://www.alzaydaninternational.com/images/og-banner.jpg';
@@ -44,6 +65,17 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
     }
     canonicalEl.href = resolvedCanonical;
 
+    // ── Robots Index/Follow Directives ─────────────────────────────────────
+    let robotsEl = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robotsEl) {
+      robotsEl = document.createElement('meta');
+      robotsEl.name = 'robots';
+      document.head.appendChild(robotsEl);
+    }
+    const indexPart = noIndex ? 'noindex' : 'index';
+    const followPart = noFollow ? 'nofollow' : 'follow';
+    robotsEl.content = `${indexPart}, ${followPart}`;
+
     // ── Hreflang ───────────────────────────────────────────────────────────
     const setHreflang = (lang: string, url: string) => {
       let el = document.querySelector<HTMLLinkElement>(`link[hreflang="${lang}"]`);
@@ -57,7 +89,6 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
     };
     setHreflang('en', resolvedCanonical);
     setHreflang('x-default', resolvedCanonical);
-    // Note: When Arabic pages are built in /ar/, add: setHreflang('ar', canonical.replace('.com/', '.com/ar/'));
 
     // ── Open Graph ─────────────────────────────────────────────────────────
     const setMeta = (property: string, content: string) => {
@@ -69,8 +100,8 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
       }
       el.content = content;
     };
-    setMeta('og:title',       title);
-    setMeta('og:description', description);
+    setMeta('og:title',       ogTitle || title);
+    setMeta('og:description', ogDescription || description);
     setMeta('og:url',         resolvedCanonical);
     setMeta('og:type',        ogType);
     setMeta('og:site_name',   'Al Zaydan International');
@@ -91,9 +122,9 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
     };
     setName('twitter:card',        'summary_large_image');
     setName('twitter:site',        '@alzaydanintl');
-    setName('twitter:title',       title);
-    setName('twitter:description', description);
-    setName('twitter:image',       resolvedImage);
+    setName('twitter:title',       twitterTitle || title);
+    setName('twitter:description', twitterDescription || description);
+    setName('twitter:image',       twitterImage || resolvedImage);
 
     // ── JSON-LD Structured Data ─────────────────────────────────────────────
     const SCHEMA_ID = 'page-jsonld';
@@ -114,5 +145,19 @@ export function useSEO({ title, description, canonical, ogImage, ogType = 'websi
       // Cleanup schema on page navigation
       document.getElementById(SCHEMA_ID)?.remove();
     };
-  }, [title, description, canonical, ogImage, ogType, schema]);
+  }, [
+    title,
+    description,
+    canonical,
+    ogImage,
+    ogType,
+    schema,
+    noIndex,
+    noFollow,
+    ogTitle,
+    ogDescription,
+    twitterTitle,
+    twitterDescription,
+    twitterImage,
+  ]);
 }

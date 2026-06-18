@@ -31,6 +31,17 @@ export interface BlogPost {
   topBarLink?: string;
   adImageUrl?: string;
   adImageLink?: string;
+  canonicalUrl?: string;
+  focusKeyword?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  noIndex?: boolean;
+  noFollow?: boolean;
+  schemaSelection?: string;
 }
 
 const COL = 'blogs';

@@ -4,6 +4,8 @@ import { ArrowRight, Tag } from 'lucide-react';
 import ProductCard, { MarketplaceProduct } from '../ui/ProductCard';
 import { STATIC_PRODUCTS } from '../../data/catalogData';
 
+import { generateSlug } from '../../lib/blogService';
+
 const BESTSELLERS = STATIC_PRODUCTS.filter(p => p.badge === 'Bestseller' || p.badge === 'Top Rated' || p.badge === 'Hot').slice(0, 10);
 const BULK_DEALS = STATIC_PRODUCTS.filter(p => p.badge === 'Bulk Deal' || (p.moq && p.moq.includes('50'))).slice(0, 6);
 
@@ -39,7 +41,7 @@ export default function FeaturedRow() {
             </div>
             <div className="divide-y divide-slate-100">
               {BULK_DEALS.map(p => (
-                <Link key={p.id} to={`/product/${p.id}`}
+                <Link key={p.id} to={`/product/${p.slug || generateSlug(p.name)}`}
                   className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 group transition-colors">
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 shrink-0">
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />

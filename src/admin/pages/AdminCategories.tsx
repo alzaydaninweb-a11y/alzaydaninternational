@@ -2,13 +2,22 @@ import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { PlusCircle, Pencil, Trash2, Check, X, Tag, Loader2, Image as ImageIcon, Upload } from 'lucide-react';
 import { uploadToR2 } from '../../lib/cloudflareR2';
+import { generateSlug } from '../../lib/blogService';
 
 export default function AdminCategories() {
-  const { categories, categoryImages, products, addCategory, updateCategory, deleteCategory, updateCategoryImage } = useStore();
+  const { categories, categoryImages, categoryDetails, products, addCategory, updateCategory, deleteCategory, updateCategoryImage, updateCategoryDetails } = useStore();
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
+  const [editSlug, setEditSlug] = useState('');
+  const [editSeoTitle, setEditSeoTitle] = useState('');
+  const [editMetaDescription, setEditMetaDescription] = useState('');
+  const [editCanonicalUrl, setEditCanonicalUrl] = useState('');
+  const [editFocusKeyword, setEditFocusKeyword] = useState('');
+  const [editOgImage, setEditOgImage] = useState('');
+  const [editNoIndex, setEditNoIndex] = useState(false);
+  const [editNoFollow, setEditNoFollow] = useState(false);
   const [confirmDeleteCategory, setConfirmDeleteCategory] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,9 +55,27 @@ export default function AdminCategories() {
       if (editImageUrl.trim() !== (categoryImages[editingCategory!] || '')) {
         await updateCategoryImage(name, editImageUrl.trim());
       }
+      await updateCategoryDetails(name, {
+        slug: editSlug.trim() || generateSlug(name),
+        seoTitle: editSeoTitle.trim(),
+        metaDescription: editMetaDescription.trim(),
+        canonicalUrl: editCanonicalUrl.trim(),
+        focusKeyword: editFocusKeyword.trim(),
+        ogImage: editOgImage.trim(),
+        noIndex: editNoIndex,
+        noFollow: editNoFollow,
+      });
       setEditingCategory(null);
       setEditValue('');
       setEditImageUrl('');
+      setEditSlug('');
+      setEditSeoTitle('');
+      setEditMetaDescription('');
+      setEditCanonicalUrl('');
+      setEditFocusKeyword('');
+      setEditOgImage('');
+      setEditNoIndex(false);
+      setEditNoFollow(false);
       setError('');
     });
   };
@@ -151,16 +178,87 @@ export default function AdminCategories() {
                       )}
                     </div>
                     {editingCategory === cat ? (
-                      <div className="flex flex-col gap-2 w-full">
-                        <input type="text" value={editValue} onChange={e => setEditValue(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && handleSaveEdit()} autoFocus placeholder="Category Name"
-                          className="w-full border border-blue-400 rounded-lg px-2.5 py-1.5 text-sm focus:ring-2 focus:ring-blue-100 outline-none" />
-                        <input type="text" value={editImageUrl} onChange={e => setEditImageUrl(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && handleSaveEdit()} placeholder="Image URL (optional)"
-                          className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none" />
+                      <div className="flex flex-col gap-3.5 w-full bg-slate-50 border border-slate-200 rounded-xl p-4 my-2">
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Category Name</label>
+                          <input type="text" value={editValue} onChange={e => setEditValue(e.target.value)}
+                            placeholder="Category Name"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white font-semibold" />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">URL Slug</label>
+                            <input type="text" value={editSlug} onChange={e => setEditSlug(e.target.value)}
+                              placeholder="e.g. power-tools"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Image URL Override</label>
+                            <input type="text" value={editImageUrl} onChange={e => setEditImageUrl(e.target.value)}
+                              placeholder="Image URL"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">SEO Title Override</label>
+                          <input type="text" value={editSeoTitle} onChange={e => setEditSeoTitle(e.target.value)}
+                            placeholder="SEO Title"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Meta Description</label>
+                          <textarea rows={2} value={editMetaDescription} onChange={e => setEditMetaDescription(e.target.value)}
+                            placeholder="Meta Description"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white resize-none" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Focus Keyword</label>
+                            <input type="text" value={editFocusKeyword} onChange={e => setEditFocusKeyword(e.target.value)}
+                              placeholder="e.g. road barrier"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Canonical URL</label>
+                            <input type="text" value={editCanonicalUrl} onChange={e => setEditCanonicalUrl(e.target.value)}
+                              placeholder="e.g. https://..."
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">OG Image Override</label>
+                          <input type="text" value={editOgImage} onChange={e => setEditOgImage(e.target.value)}
+                            placeholder="Facebook / LinkedIn Image URL"
+                            className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-sm focus:border-blue-500 outline-none bg-white" />
+                        </div>
+
+                        <div className="flex gap-4 pt-1">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={editNoIndex} onChange={e => setEditNoIndex(e.target.checked)}
+                              className="rounded text-red-600 focus:ring-red-500 border-gray-300 w-4 h-4 cursor-pointer" />
+                            <span className="text-xs font-bold text-slate-700">noindex</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={editNoFollow} onChange={e => setEditNoFollow(e.target.checked)}
+                              className="rounded text-red-600 focus:ring-red-500 border-gray-300 w-4 h-4 cursor-pointer" />
+                            <span className="text-xs font-bold text-slate-700">nofollow</span>
+                          </label>
+                        </div>
                       </div>
                     ) : (
-                      <span className="font-semibold text-slate-800 text-sm">{cat}</span>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-800 text-sm">{cat}</span>
+                        {categoryDetails[cat] && (
+                          <span className="text-[10px] text-slate-400 font-mono mt-0.5">
+                            /category/{categoryDetails[cat].slug}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                   <div className="w-24 text-center">
@@ -191,7 +289,20 @@ export default function AdminCategories() {
                       </div>
                     ) : (
                       <>
-                        <button onClick={() => { setEditingCategory(cat); setEditValue(cat); setEditImageUrl(categoryImages[cat] || ''); }}
+                        <button onClick={() => {
+                          setEditingCategory(cat);
+                          setEditValue(cat);
+                          setEditImageUrl(categoryImages[cat] || '');
+                          const details = categoryDetails[cat] || {};
+                          setEditSlug(details.slug || generateSlug(cat));
+                          setEditSeoTitle(details.seoTitle || '');
+                          setEditMetaDescription(details.metaDescription || '');
+                          setEditCanonicalUrl(details.canonicalUrl || '');
+                          setEditFocusKeyword(details.focusKeyword || '');
+                          setEditOgImage(details.ogImage || '');
+                          setEditNoIndex(details.noIndex || false);
+                          setEditNoFollow(details.noFollow || false);
+                        }}
                           className="p-1.5 rounded-lg text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                           <Pencil className="w-4 h-4" />
                         </button>

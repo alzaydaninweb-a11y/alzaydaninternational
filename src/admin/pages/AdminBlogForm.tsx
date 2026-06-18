@@ -5,7 +5,8 @@ import {
   Image as ImageIcon, AlignLeft, Code2, BookOpen, RefreshCw,
   Youtube, ShoppingBag,
 } from 'lucide-react';
-import { useStore } from '../../context/StoreContext';
+import { useStore, updateSitemapMetadata } from '../../context/StoreContext';
+import { db } from '../../lib/firebase';
 import {
   BlogPost, createBlog, updateBlog, getAllBlogs,
   generateSlug, estimateReadTime,
@@ -43,6 +44,17 @@ const EMPTY_FORM = {
   topBarLink: '',
   adImageUrl: '',
   adImageLink: '',
+  canonicalUrl: '',
+  focusKeyword: '',
+  ogTitle: '',
+  ogDescription: '',
+  ogImage: '',
+  twitterTitle: '',
+  twitterDescription: '',
+  twitterImage: '',
+  noIndex: false,
+  noFollow: false,
+  schemaSelection: 'article',
 };
 
 export default function AdminBlogForm() {
@@ -85,12 +97,23 @@ export default function AdminBlogForm() {
         topBarLink:      blog.topBarLink || '',
         adImageUrl:      blog.adImageUrl || '',
         adImageLink:     blog.adImageLink || '',
+        canonicalUrl:    blog.canonicalUrl || '',
+        focusKeyword:    blog.focusKeyword || '',
+        ogTitle:         blog.ogTitle || '',
+        ogDescription:   blog.ogDescription || '',
+        ogImage:         blog.ogImage || '',
+        twitterTitle:    blog.twitterTitle || '',
+        twitterDescription: blog.twitterDescription || '',
+        twitterImage:    blog.twitterImage || '',
+        noIndex:         blog.noIndex || false,
+        noFollow:        blog.noFollow || false,
+        schemaSelection: blog.schemaSelection || 'article',
       });
       setLoading(false);
     });
   }, [id, isEdit, navigate]);
 
-  const set = (field: keyof typeof EMPTY_FORM, value: string | boolean) => {
+  const set = (field: keyof typeof EMPTY_FORM, value: string | boolean | string[]) => {
     setForm(prev => {
       const next = { ...prev, [field]: value };
       // Auto-generate slug from title (if not locked)
@@ -136,12 +159,24 @@ export default function AdminBlogForm() {
         adImageLink:     form.adImageLink.trim(),
         readTime:        estimateReadTime(form.htmlContent),
         publishedAt:     form.published ? new Date().toISOString() : '',
+        canonicalUrl:    form.canonicalUrl.trim(),
+        focusKeyword:    form.focusKeyword.trim(),
+        ogTitle:         form.ogTitle.trim(),
+        ogDescription:   form.ogDescription.trim(),
+        ogImage:         form.ogImage.trim(),
+        twitterTitle:    form.twitterTitle.trim(),
+        twitterDescription: form.twitterDescription.trim(),
+        twitterImage:    form.twitterImage.trim(),
+        noIndex:         form.noIndex,
+        noFollow:        form.noFollow,
+        schemaSelection: form.schemaSelection,
       };
       if (isEdit && id) {
         await updateBlog(id, payload);
       } else {
         await createBlog(payload);
       }
+      await updateSitemapMetadata(db);
       navigate('/admin/blogs');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -302,41 +337,192 @@ export default function AdminBlogForm() {
 
               {/* SEO Check Tab */}
               {tab === 'seo' && (
-                <div className="p-5 space-y-4">
-                  {/* Google SERP Preview */}
-                  <div className="border border-gray-200 rounded-xl p-5 bg-white">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Google Search Preview</p>
-                    <div className="space-y-1">
-                      <p className="text-blue-700 text-lg font-medium leading-tight truncate">
-                        {form.metaTitle || form.title || 'Blog Post Title'}
-                      </p>
-                      <p className="text-green-700 text-xs">
-                        alzaydan.com/blog/{form.slug || 'blog-post-slug'}
-                      </p>
-                      <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
-                        {form.metaDescription || form.excerpt || 'Add a meta description to control what Google shows here.'}
-                      </p>
+                <div className="p-5 space-y-5">
+                  {/* Previews and checklist */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* Google SERP Preview */}
+                    <div className="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Google Search Preview</p>
+                      <div className="space-y-1">
+                        <p className="text-blue-700 text-lg font-medium leading-tight truncate">
+                          {form.metaTitle || form.title || 'Blog Post Title'}
+                        </p>
+                        <p className="text-green-700 text-xs font-mono">
+                          alzaydan.com/blog/{form.slug || 'blog-post-slug'}
+                        </p>
+                        <p className="text-slate-600 text-xs leading-relaxed line-clamp-2">
+                          {form.metaDescription || form.excerpt || 'Add a meta description to control what Google shows here.'}
+                        </p>
+                      </div>
+                    </div>
+                    {/* SEO Checklist */}
+                    <div className="space-y-2 border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">SEO Checklist</p>
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto">
+                        {[
+                          { ok: form.metaTitle.length > 0 && form.metaTitle.length <= 60,        label: `Meta title (${form.metaTitle.length}/60)` },
+                          { ok: form.metaDescription.length >= 120 && form.metaDescription.length <= 160, label: `Meta desc (${form.metaDescription.length}/160)` },
+                          { ok: Boolean(form.coverImage),    label: 'Cover image set' },
+                          { ok: form.tags.split(',').filter(Boolean).length >= 3, label: '3+ tags set' },
+                          { ok: form.htmlContent.length > 500, label: 'Length > 500' },
+                          { ok: !form.slug.includes(' '),    label: 'Slug valid' },
+                        ].map(({ ok, label }) => (
+                          <div key={label} className={`flex items-center gap-2 text-xs px-2.5 py-1 rounded-lg ${ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                            <span>{ok ? '✅' : '❌'}</span> {label}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  {/* SEO Checklist */}
-                  <div className="space-y-2">
-                    {[
-                      { ok: form.metaTitle.length > 0 && form.metaTitle.length <= 60,        label: `Meta title (${form.metaTitle.length}/60 chars)` },
-                      { ok: form.metaDescription.length >= 120 && form.metaDescription.length <= 160, label: `Meta description (${form.metaDescription.length}/160 chars)` },
-                      { ok: Boolean(form.coverImage),    label: 'Cover image set (used for social sharing)' },
-                      { ok: form.tags.split(',').filter(Boolean).length >= 3, label: 'At least 3 tags set' },
-                      { ok: form.htmlContent.length > 500, label: 'Content length > 500 chars' },
-                      { ok: !form.slug.includes(' '),    label: 'Slug has no spaces' },
-                    ].map(({ ok, label }) => (
-                      <div key={label} className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg ${ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                        <span>{ok ? '✅' : '❌'}</span> {label}
+
+                  {/* Core Crawl & Metadata Form */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                    <h3 className="text-xs font-bold text-slate-800">Advanced SEO & Structured Data</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Focus Keyword</label>
+                        <input
+                          type="text"
+                          value={form.focusKeyword}
+                          onChange={e => set('focusKeyword', e.target.value)}
+                          placeholder="e.g. road safety standard"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:border-blue-500 outline-none transition-all bg-white"
+                        />
                       </div>
-                    ))}
+                      
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Canonical URL</label>
+                        <input
+                          type="text"
+                          value={form.canonicalUrl}
+                          onChange={e => set('canonicalUrl', e.target.value)}
+                          placeholder="e.g. https://..."
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:border-blue-500 outline-none transition-all bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Schema Structured Data</label>
+                        <select
+                          value={form.schemaSelection}
+                          onChange={e => set('schemaSelection', e.target.value)}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:border-blue-500 outline-none transition-all bg-white font-medium"
+                        >
+                          <option value="none">None</option>
+                          <option value="article">Article (Default)</option>
+                          <option value="faq">FAQ Schema</option>
+                          <option value="breadcrumb">Breadcrumb List</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1.5">Search Bots Indexing</label>
+                      <div className="flex gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={form.noIndex}
+                            onChange={e => set('noIndex', e.target.checked)}
+                            className="rounded text-red-600 focus:ring-red-500 border-gray-300 w-4 h-4 cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-slate-700">noindex (Do not index)</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={form.noFollow}
+                            onChange={e => set('noFollow', e.target.checked)}
+                            className="rounded text-red-600 focus:ring-red-500 border-gray-300 w-4 h-4 cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-slate-700">nofollow (Do not follow links)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Social Graph Tags */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                    <h3 className="text-sm font-bold text-slate-800">Social Media Graph Cards (Facebook & Twitter)</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-700 border-b pb-1 mb-2">Open Graph (Facebook/LinkedIn)</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">OG Title</label>
+                            <input
+                              type="text"
+                              value={form.ogTitle}
+                              onChange={e => set('ogTitle', e.target.value)}
+                              placeholder="Fallback: Meta Title"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">OG Description</label>
+                            <input
+                              type="text"
+                              value={form.ogDescription}
+                              onChange={e => set('ogDescription', e.target.value)}
+                              placeholder="Fallback: Meta Description"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">OG Image URL</label>
+                            <input
+                              type="text"
+                              value={form.ogImage}
+                              onChange={e => set('ogImage', e.target.value)}
+                              placeholder="Fallback: Cover Image"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-700 border-b pb-1 mb-2">Twitter Card Override</h4>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Title</label>
+                            <input
+                              type="text"
+                              value={form.twitterTitle}
+                              onChange={e => set('twitterTitle', e.target.value)}
+                              placeholder="Fallback: Meta Title"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Description</label>
+                            <input
+                              type="text"
+                              value={form.twitterDescription}
+                              onChange={e => set('twitterDescription', e.target.value)}
+                              placeholder="Fallback: Meta Description"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Twitter Image URL</label>
+                            <input
+                              type="text"
+                              value={form.twitterImage}
+                              onChange={e => set('twitterImage', e.target.value)}
+                              placeholder="Fallback: Cover Image"
+                              className="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs focus:border-blue-500 outline-none bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-
           </div>
 
           {/* ── Right: Sidebar ─────────────────────────────────────────────── */}

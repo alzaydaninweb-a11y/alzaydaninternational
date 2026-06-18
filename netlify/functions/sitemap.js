@@ -1,42 +1,109 @@
 /**
  * netlify/functions/sitemap.js
  *
- * Dynamic XML Sitemap generator for alzaydaninternational.com
- * ─────────────────────────────────────────────────────────────
- * • Fetches published blog slugs live from Firestore REST API
- * • Merges with all static routes
- * • Returns well-formed XML with correct priorities
- * • Cached at CDN for 1 hour (Cache-Control: s-maxage=3600)
- * • Falls back to static-only sitemap if Firestore is unreachable
+ * Dynamic XML Sitemap index and sub-sitemaps generator for alzaydaninternational.com
+ * ─────────────────────────────────────────────────────────────────────────────
+ * • GET /sitemap.xml                  → Returns Master Sitemap Index
+ * • GET /sitemap-products.xml         → Returns all product URLs (split support)
+ * • GET /sitemap-categories.xml       → Returns active category landing page URLs
+ * • GET /sitemap-pages.xml            → Returns static pages list
+ * • GET /sitemap-blogs.xml            → Returns published blogs
  *
- * Invoked via Netlify redirect: GET /sitemap.xml → /.netlify/functions/sitemap
+ * Sitemaps are served dynamically in real-time with 1-hour CDN caching.
  */
 
-const BASE_URL    = 'https://www.alzaydaninternational.com';
-const PROJECT_ID  = 'al-zaydan-international';
-const TODAY       = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+const BASE_URL   = 'https://www.alzaydaninternational.com';
+const PROJECT_ID = 'al-zaydan-international';
+const TODAY      = new Date().toISOString().split('T')[0];
 
-// ── Static routes ─────────────────────────────────────────────────────────────
-const STATIC_URLS = [
-  { path: '/',           changefreq: 'weekly',  priority: '1.0', isLanding: true },
-  { path: '/traffic-safety-equipment-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
-  { path: '/road-safety-products-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
-  { path: '/reflective-sheeting-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
-  { path: '/packaging-materials-supplier-uae', changefreq: 'monthly', priority: '0.9', isLanding: true },
-  { path: '/about',      changefreq: 'monthly', priority: '0.8' },
-  { path: '/solutions',  changefreq: 'monthly', priority: '0.8' },
-  { path: '/contact',    changefreq: 'monthly', priority: '0.8' },
-  { path: '/rfq',        changefreq: 'monthly', priority: '0.8' },
-  { path: '/categories', changefreq: 'weekly',  priority: '0.8' },
-  { path: '/blog',       changefreq: 'weekly',  priority: '0.7' },
-  { path: '/legal',      changefreq: 'yearly',  priority: '0.3' },
+const STATIC_PAGES = [
+  '/',
+  '/about',
+  '/solutions',
+  '/contact',
+  '/rfq',
+  '/categories',
+  '/blog',
+  '/search',
+  '/legal',
+  '/traffic-safety-equipment-uae',
+  '/road-safety-products-uae',
+  '/reflective-sheeting-uae',
+  '/packaging-materials-supplier-uae'
 ];
 
-// ── Firestore REST query for published blogs ──────────────────────────────────
-async function fetchPublishedBlogSlugs() {
-  const url =
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
+function slugify(title) {
+  return String(title || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80);
+}
 
+// ── Firestore REST API Queries ───────────────────────────────────────────────
+
+async function fetchSitemapMetadata() {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/sitemap`;
+  const apiKey = process.env.FIREBASE_API_KEY;
+  const endpoint = apiKey ? `${url}?key=${apiKey}` : url;
+
+  try {
+    const res = await fetch(endpoint, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return { totalProducts: 0 };
+    const data = await res.json();
+    return {
+      totalProducts: Number(data.fields?.totalProducts?.integerValue || 0)
+    };
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch sitemap metadata doc:', err.message);
+    return { totalProducts: 0 };
+  }
+}
+
+async function fetchCategoryDetails() {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings/categories`;
+  const apiKey = process.env.FIREBASE_API_KEY;
+  const endpoint = apiKey ? `${url}?key=${apiKey}` : url;
+
+  try {
+    const res = await fetch(endpoint, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return { list: [], details: {} };
+    const data = await res.json();
+
+    const list = [];
+    if (data.fields?.list?.arrayValue?.values) {
+      for (const v of data.fields.list.arrayValue.values) {
+        if (v.stringValue) list.push(v.stringValue);
+      }
+    }
+
+    const details = {};
+    if (data.fields?.details?.mapValue?.fields) {
+      const fields = data.fields.details.mapValue.fields;
+      for (const key of Object.keys(fields)) {
+        const fieldsObj = fields[key]?.mapValue?.fields;
+        if (fieldsObj) {
+          details[key] = {
+            name: fieldsObj.name?.stringValue || key,
+            slug: fieldsObj.slug?.stringValue || '',
+            seoTitle: fieldsObj.seoTitle?.stringValue || '',
+            metaDescription: fieldsObj.metaDescription?.stringValue || ''
+          };
+        }
+      }
+    }
+
+    return { list, details };
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch categories from Firestore:', err.message);
+    return { list: [], details: {} };
+  }
+}
+
+async function fetchPublishedBlogSlugs() {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
   const body = JSON.stringify({
     structuredQuery: {
       from: [{ collectionId: 'blogs' }],
@@ -44,138 +111,240 @@ async function fetchPublishedBlogSlugs() {
         fieldFilter: {
           field: { fieldPath: 'published' },
           op: 'EQUAL',
-          value: { booleanValue: true },
-        },
+          value: { booleanValue: true }
+        }
       },
       select: {
         fields: [
           { fieldPath: 'slug' },
           { fieldPath: 'updatedAt' },
-          { fieldPath: 'publishedAt' },
-        ],
-      },
-      // No orderBy here — sorts in memory below to avoid needing a composite index
-    },
+          { fieldPath: 'publishedAt' }
+        ]
+      }
+    }
   });
 
   const apiKey = process.env.FIREBASE_API_KEY;
   const endpoint = apiKey ? `${url}?key=${apiKey}` : url;
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-    signal: AbortSignal.timeout(8000), // 8 s timeout
-  });
-
-  if (!res.ok) {
-    throw new Error(`Firestore REST error ${res.status}: ${await res.text()}`);
-  }
-
-  const data = await res.json();
-
-  // Parse and sort in memory (avoids needing a composite Firestore index)
-  const entries = data
-    .filter(item => item.document?.fields?.slug?.stringValue)
-    .map(item => {
-      const fields = item.document.fields;
-      const slug   = fields.slug.stringValue;
-      
-      if (slug.length < 20 || /(-pri|-pro|-con|-ua|-sup)$/.test(slug)) {
-        console.warn(`[sitemap] Warning: Suspiciously truncated slug detected: ${slug}`);
-      }
-
-      const rawDate =
-        item.document.createTime ||
-        fields.publishedAt?.stringValue ||
-        TODAY;
-      return { slug, lastmod: rawDate.split('T')[0] };
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      signal: AbortSignal.timeout(8000)
     });
 
-  // Sort by lastmod descending
-  entries.sort((a, b) => b.lastmod.localeCompare(a.lastmod));
-  return entries;
-}
+    if (!res.ok) throw new Error(`Firestore REST query error ${res.status}`);
+    const data = await res.json();
 
-// ── XML builder ───────────────────────────────────────────────────────────────
-function buildUrlEntry({ loc, lastmod, changefreq, priority, isLanding }) {
-  let imageTag = '';
-  if (isLanding) {
-    imageTag = `
-    <image:image>
-      <image:loc>https://www.alzaydaninternational.com/images/og-banner.jpg</image:loc>
-      <image:title>Al Zaydan International — UAE B2B Industrial Supplies</image:title>
-    </image:image>`;
+    return data
+      .filter(item => item.document?.fields?.slug?.stringValue)
+      .map(item => {
+        const fields = item.document.fields;
+        const slug = fields.slug.stringValue;
+        const rawDate = fields.updatedAt?.stringValue || fields.publishedAt?.stringValue || TODAY;
+        return { slug, lastmod: rawDate.split('T')[0] };
+      });
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch blogs from Firestore:', err.message);
+    return [];
   }
-  return `
-  <url>
-    <loc>${loc}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>${imageTag}
-  </url>`;
 }
 
-function buildSitemap(blogEntries) {
-  const staticEntries = STATIC_URLS.map(u =>
-    buildUrlEntry({
-      loc:        `${BASE_URL}${u.path}`,
-      lastmod:    TODAY,
-      changefreq: u.changefreq,
-      priority:   u.priority,
-      isLanding:  u.isLanding,
-    })
-  ).join('');
+async function fetchProducts() {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery`;
+  const body = JSON.stringify({
+    structuredQuery: {
+      from: [{ collectionId: 'products' }],
+      select: {
+        fields: [
+          { fieldPath: 'slug' },
+          { fieldPath: 'name' },
+          { fieldPath: 'updatedAt' }
+        ]
+      }
+    }
+  });
 
-  const blogUrlEntries = blogEntries.map(b =>
-    buildUrlEntry({
-      loc:        `${BASE_URL}/blog/${b.slug}`,
-      lastmod:    b.lastmod,
-      changefreq: 'monthly',
-      priority:   '0.6',
-    })
-  ).join('');
+  const apiKey = process.env.FIREBASE_API_KEY;
+  const endpoint = apiKey ? `${url}?key=${apiKey}` : url;
 
-  const totalUrls = STATIC_URLS.length + blogEntries.length;
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      signal: AbortSignal.timeout(12000)
+    });
+
+    if (!res.ok) throw new Error(`Firestore REST query error ${res.status}`);
+    const data = await res.json();
+
+    return data
+      .filter(item => item.document?.fields)
+      .map(item => {
+        const fields = item.document.fields;
+        const name = fields.name?.stringValue || '';
+        const slugVal = fields.slug?.stringValue || '';
+        const updatedAt = fields.updatedAt?.stringValue || item.document.updateTime || TODAY;
+        return {
+          name,
+          slug: slugVal,
+          updatedAt: updatedAt.split('T')[0]
+        };
+      });
+  } catch (err) {
+    console.error('[sitemap] Failed to fetch products from Firestore:', err.message);
+    return [];
+  }
+}
+
+// ── XML Builders ─────────────────────────────────────────────────────────────
+
+function buildSitemapIndex(totalProducts) {
+  const productSitemapsCount = Math.max(1, Math.ceil(totalProducts / 50000));
+  let productSitemapTags = '';
+
+  if (productSitemapsCount === 1) {
+    productSitemapTags = `  <sitemap>\n    <loc>${BASE_URL}/sitemap-products.xml</loc>\n  </sitemap>`;
+  } else {
+    for (let i = 1; i <= productSitemapsCount; i++) {
+      productSitemapTags += `\n  <sitemap>\n    <loc>${BASE_URL}/sitemap-products-${i}.xml</loc>\n  </sitemap>`;
+    }
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<!-- Al Zaydan International FZE — Dynamic XML Sitemap -->
-<!-- Generated: ${new Date().toISOString()} | Total URLs: ${totalUrls} -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-pages.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-categories.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap-blogs.xml</loc>
+  </sitemap>${productSitemapTags}
+</sitemapindex>`;
+}
 
-  <!-- ── Static Pages ──────────────────────────────────────── -->${staticEntries}
+function buildPagesSitemap() {
+  const entries = STATIC_PAGES.map(p => `
+  <url>
+    <loc>${BASE_URL}${p === '/' ? '' : p}</loc>
+    <lastmod>${TODAY}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('');
 
-  <!-- ── Blog Posts (Firestore-dynamic, priority 0.6) ──────── -->${blogUrlEntries || '\n  <!-- No published blog posts yet -->'}
-
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
 </urlset>`;
 }
 
-// ── Netlify Function handler ──────────────────────────────────────────────────
-export const handler = async () => {
-  let blogEntries = [];
+function buildCategoriesSitemap(list, details) {
+  const entries = list.map(c => {
+    const detailsObj = details[c] || {};
+    const cSlug = detailsObj.slug || slugify(c);
+    return `
+  <url>
+    <loc>${BASE_URL}/category/${encodeURIComponent(cSlug)}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+  }).join('');
 
-  try {
-    blogEntries = await fetchPublishedBlogSlugs();
-    console.log(`[sitemap] Fetched ${blogEntries.length} published blog(s) from Firestore`);
-  } catch (err) {
-    // Non-fatal: serve sitemap without blog entries rather than returning 500
-    console.error('[sitemap] Firestore fetch failed, serving static-only sitemap:', err.message);
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</urlset>`;
+}
+
+function buildBlogsSitemap(blogs) {
+  const entries = blogs.map(b => `
+  <url>
+    <loc>${BASE_URL}/blog/${b.slug}</loc>
+    <lastmod>${b.lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`).join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</urlset>`;
+}
+
+function buildProductsSitemap(products, pageNum) {
+  let selected = products;
+  if (pageNum) {
+    selected = products.slice((pageNum - 1) * 50000, pageNum * 50000);
   }
 
-  const xml = buildSitemap(blogEntries);
+  const entries = selected.map(p => {
+    const pSlug = p.slug || slugify(p.name);
+    return `
+  <url>
+    <loc>${BASE_URL}/product/${encodeURIComponent(pSlug)}</loc>
+    <lastmod>${p.updatedAt}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+  }).join('');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</urlset>`;
+}
+
+// ── Handler ───────────────────────────────────────────────────────────────────
+
+export const handler = async (event) => {
+  const params = event.queryStringParameters || {};
+  const type   = params.type || 'index';
+  const num    = params.num ? parseInt(params.num, 10) : null;
+
+  let body = '';
+  let cacheKey = type;
+
+  try {
+    if (type === 'index') {
+      const { totalProducts } = await fetchSitemapMetadata();
+      body = buildSitemapIndex(totalProducts);
+    } else if (type === 'pages') {
+      body = buildPagesSitemap();
+    } else if (type === 'categories') {
+      const { list, details } = await fetchCategoryDetails();
+      body = buildCategoriesSitemap(list, details);
+    } else if (type === 'blogs') {
+      const blogs = await fetchPublishedBlogSlugs();
+      body = buildBlogsSitemap(blogs);
+    } else if (type === 'products') {
+      const products = await fetchProducts();
+      body = buildProductsSitemap(products, num);
+      if (num) cacheKey += `-${num}`;
+    } else {
+      // Fallback
+      return { statusCode: 404, body: 'Not Found' };
+    }
+  } catch (err) {
+    console.error('[sitemap] Handler error:', err.message);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'Failed to generate sitemap'
+    };
+  }
 
   return {
     statusCode: 200,
     headers: {
       'Content-Type':  'application/xml; charset=utf-8',
-      // CDN caches for 1 hour, Netlify CDN respects s-maxage
       'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-      'X-Sitemap-Blogs': String(blogEntries.length),
+      'X-Sitemap-Type': cacheKey
     },
-    body: xml,
+    body: body.trim()
   };
 };

@@ -159,7 +159,7 @@ export default function ReflectiveSheetingPage() {
             </div>
             <ProductListingGrid customProducts={relatedProducts} columns={6} />
             <div className="text-center mt-10">
-              <Link to="/search?category=Reflectors & Signage" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-full transition-colors">
+              <Link to="/category/reflectors-signage" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-full transition-colors">
                 View All Reflective Products <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

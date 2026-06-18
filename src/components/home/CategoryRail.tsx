@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 import { MEGA_CATEGORIES } from '../../data/catalogData';
 
 const CAT_COLORS = [
@@ -16,7 +17,7 @@ const CAT_COLORS = [
 ];
 
 export default function CategoryRail() {
-  const { categories, categoryImages } = useStore();
+  const { categories, categoryImages, categoryDetails } = useStore();
   
   return (
     <div className="bg-white border-b border-slate-200">
@@ -37,7 +38,7 @@ export default function CategoryRail() {
             return (
               <Link
                 key={cat}
-                to={`/search?category=${encodeURIComponent(cat)}`}
+                to={`/category/${categoryDetails?.[cat]?.slug || generateSlug(cat)}`}
                 className="flex flex-col items-center bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-500 transition-all duration-200 overflow-hidden group h-full"
               >
                 {imageUrl ? (

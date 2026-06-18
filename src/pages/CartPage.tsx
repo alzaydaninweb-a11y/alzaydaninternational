@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trash2, ArrowRight, ShoppingBag, Shield, Truck, Tag, ChevronRight, Package } from 'lucide-react';
 import WhatsAppIcon from '../components/icons/WhatsAppIcon';
 import { useCart } from '../context/CartContext';
+import { generateSlug } from '../lib/blogService';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, subtotal } = useCart();
@@ -85,13 +86,13 @@ export default function CartPage() {
                 >
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 md:p-5">
                     <Link
-                      to={`/product/${item.id}`}
+                      to={`/product/${item.slug || generateSlug(item.name)}`}
                       className="w-20 h-20 md:w-[88px] md:h-[88px] shrink-0 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center"
                     >
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </Link>
                     <div className="flex-1 min-w-0">
-                      <Link to={`/product/${item.id}`}>
+                      <Link to={`/product/${item.slug || generateSlug(item.name)}`}>
                         <h3 className="font-bold text-slate-900 text-[15px] leading-snug hover:text-blue-600 transition-colors line-clamp-2">{item.name}</h3>
                       </Link>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -136,13 +137,13 @@ export default function CartPage() {
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 md:p-5">
                           <Link
-                            to={`/product/${item.id}`}
+                            to={`/product/${item.slug || generateSlug(item.name)}`}
                             className="w-20 h-20 md:w-[88px] md:h-[88px] shrink-0 rounded-xl bg-white border border-amber-200 overflow-hidden flex items-center justify-center"
                           >
                             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                           </Link>
                           <div className="flex-1 min-w-0">
-                            <Link to={`/product/${item.id}`}>
+                            <Link to={`/product/${item.slug || generateSlug(item.name)}`}>
                               <h3 className="font-bold text-slate-900 text-[15px] leading-snug hover:text-blue-600 transition-colors line-clamp-2">{item.name}</h3>
                             </Link>
                             <div className="flex flex-wrap items-center gap-2 mt-1.5">

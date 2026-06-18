@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Clock, TrendingUp, Package, Tag, X, ArrowRight } from 'lucide-react';
+import { useStore } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 
 /* ─── Static procurement search suggestions ────────────────────────────────── */
 export const POPULAR_SEARCHES = [
@@ -88,6 +90,7 @@ export default function SmartSearchDropdown({
   recentSearches,
 }: Props) {
   const navigate = useNavigate();
+  const { categoryDetails } = useStore();
   const trimmed = query.trim().toLowerCase();
 
   /* ── Filtered products ── */
@@ -224,7 +227,7 @@ export default function SmartSearchDropdown({
                   <button
                     key={cat}
                     type="button"
-                    onClick={() => { navigate(`/search?category=${encodeURIComponent(cat)}`); onClose(); }}
+                    onClick={() => { navigate(`/category/${categoryDetails?.[cat]?.slug || generateSlug(cat)}`); onClose(); }}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${focusedIndex === flatIdx ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                   >
                     <div className="w-5 h-5 bg-blue-50 rounded flex items-center justify-center shrink-0">

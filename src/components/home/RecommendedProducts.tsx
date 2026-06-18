@@ -4,6 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import type { Product } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 
 /* ── Sliding image card ──────────────────────────────────────────────────── */
 function RecommendedCard({
@@ -48,7 +49,7 @@ function RecommendedCard({
 
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={`/product/${product.slug || generateSlug(product.name)}`}
       className="min-w-[260px] w-full lg:min-w-0 bg-white rounded-3xl flex flex-col snap-start cursor-pointer relative group p-2 hover:shadow-lg transition-all border border-gray-200 overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

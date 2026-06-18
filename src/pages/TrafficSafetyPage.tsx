@@ -177,7 +177,7 @@ export default function TrafficSafetyPage() {
             </div>
             <ProductListingGrid customProducts={relatedProducts} columns={6} />
             <div className="text-center mt-10">
-              <Link to="/search?category=Traffic Safety" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-full transition-colors">
+              <Link to="/category/traffic-safety" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-4 rounded-full transition-colors">
                 View All Traffic Safety Products <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

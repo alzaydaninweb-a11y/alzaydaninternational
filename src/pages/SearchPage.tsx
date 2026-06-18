@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import ProductListingGrid from '../components/home/ProductListingGrid';
 import { Filter, X, ChevronDown, ChevronUp, SlidersHorizontal, RotateCcw, Check } from 'lucide-react';
 import { useSEO } from '../lib/useSEO';
+import { generateSlug } from '../lib/blogService';
 
 
 
@@ -41,11 +42,19 @@ function FilterSection({ title, count, children }: { title: string; count?: numb
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SearchPage() {
-  const { products: ALL_PRODUCTS, categories: ALL_CATEGORIES } = useStore();
+  const { products: ALL_PRODUCTS, categories: ALL_CATEGORIES, categoryDetails } = useStore();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { slug } = useParams();
 
-  const categoryQuery  = searchParams.get('category')  ?? '';
+  const matchedCategory = useMemo(() => {
+    if (!slug) return null;
+    return Object.values(categoryDetails || {}).find(c => c.slug === slug) || null;
+  }, [slug, categoryDetails]);
+
+  const matchedCategoryName = matchedCategory ? matchedCategory.name : '';
+
+  const categoryQuery  = matchedCategoryName || (searchParams.get('category') ?? '');
   const searchQuery    = searchParams.get('q')          ?? '';
 
   // Filter state
@@ -53,10 +62,18 @@ export default function SearchPage() {
   const [selBrands, setSelBrands]       = useState<string[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-
-
   // Sync URL params → local state
   useEffect(() => { setSelCategory(categoryQuery); }, [categoryQuery]);
+
+  // Client-side 301-like redirect for search category queries
+  const categoryParam = searchParams.get('category');
+  useEffect(() => {
+    if (categoryParam) {
+      const details = Object.values(categoryDetails || {}).find(c => c.name === categoryParam);
+      const catSlug = details?.slug || generateSlug(categoryParam);
+      navigate(`/category/${catSlug}`, { replace: true });
+    }
+  }, [categoryParam, categoryDetails, navigate]);
 
   // ── Derived: available brands (respect current category selection) ─
   const availableBrands = useMemo(() => {
@@ -91,15 +108,31 @@ export default function SearchPage() {
     (selCategory ? 1 : 0) +
     selBrands.length;
 
-  // Canonical always points to /search (without query params) to avoid
-  // duplicate content from filter/search combinations.
+  const categorySlug = useMemo(() => {
+    if (!selCategory) return '';
+    const details = Object.values(categoryDetails || {}).find(c => c.name === selCategory);
+    return details?.slug || generateSlug(selCategory);
+  }, [selCategory, categoryDetails]);
+
+  const resolvedCanonical = useMemo(() => {
+    if (slug) {
+      return `https://www.alzaydaninternational.com/category/${categorySlug}`;
+    }
+    return `https://www.alzaydaninternational.com/search`;
+  }, [slug, categorySlug]);
+
   useSEO({
     title: searchQuery
       ? `"${searchQuery}" | Al Zaydan International — UAE Industrial`
       : selCategory
-        ? `${selCategory} Supplier UAE | Al Zaydan International`
+        ? (matchedCategory?.seoTitle || `${selCategory} Supplier UAE | Al Zaydan International`)
         : 'Browse All Products | Al Zaydan International UAE',
-    description: 'Browse Al Zaydan\'s full product catalogue — traffic safety equipment, reflective sheeting, road marking materials, packaging supplies and more.',
+    description: searchQuery
+      ? `Search results for "${searchQuery}" at Al Zaydan International.`
+      : selCategory
+        ? (matchedCategory?.metaDescription || `Buy high quality ${selCategory} products online from Al Zaydan International. request a quote today.`)
+        : 'Browse Al Zaydan\'s full product catalogue — traffic safety equipment, reflective sheeting, road marking materials, packaging supplies and more.',
+    canonical: resolvedCanonical,
   });
 
   const clearAll = useCallback(() => {
@@ -148,7 +181,10 @@ export default function SearchPage() {
           <ul className="space-y-1">
             <li>
               <button
-                onClick={() => { setSelCategory(''); setSelBrands([]); }}
+                onClick={() => {
+                  setSelBrands([]);
+                  navigate('/search' + (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''));
+                }}
                 className="w-full flex items-center gap-2.5 text-[13px] text-slate-700 hover:text-slate-900 transition-colors py-1.5"
               >
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -161,23 +197,30 @@ export default function SearchPage() {
                 </span>
               </button>
             </li>
-            {availableCategories.map(cat => (
-              <li key={cat}>
-                <button
-                  onClick={() => { setSelCategory(cat); setSelBrands([]); }}
-                  className="w-full flex items-center gap-2.5 text-[13px] text-slate-700 hover:text-slate-900 transition-colors py-1.5"
-                >
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                    selCategory === cat ? 'border-blue-600' : 'border-slate-300'
-                  }`}>
-                    {selCategory === cat && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
-                  </div>
-                  <span className={selCategory === cat ? 'font-bold text-slate-900' : 'font-medium'}>
-                    {cat}
-                  </span>
-                </button>
-              </li>
-            ))}
+            {availableCategories.map(cat => {
+              const details = Object.values(categoryDetails || {}).find(c => c.name === cat);
+              const catSlug = details?.slug || generateSlug(cat);
+              return (
+                <li key={cat}>
+                  <button
+                    onClick={() => {
+                      setSelBrands([]);
+                      navigate(`/category/${catSlug}`);
+                    }}
+                    className="w-full flex items-center gap-2.5 text-[13px] text-slate-700 hover:text-slate-900 transition-colors py-1.5"
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      selCategory === cat ? 'border-blue-600' : 'border-slate-300'
+                    }`}>
+                      {selCategory === cat && <div className="w-2 h-2 bg-blue-600 rounded-full" />}
+                    </div>
+                    <span className={selCategory === cat ? 'font-bold text-slate-900' : 'font-medium'}>
+                      {cat}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </FilterSection>
 
@@ -228,7 +271,7 @@ export default function SearchPage() {
         {selCategory && (
           <span className="flex items-center gap-1 bg-blue-50 text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-full border border-blue-100">
             {selCategory}
-            <button onClick={() => setSelCategory('')} className="hover:text-red-600 ml-0.5">
+            <button onClick={() => navigate('/search' + (searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''))} className="hover:text-red-600 ml-0.5">
               <X className="w-3 h-3" />
             </button>
           </span>

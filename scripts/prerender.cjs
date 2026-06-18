@@ -27,11 +27,16 @@
 
 const fs   = require('fs');
 const path = require('path');
+const https = require('https');
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 const ROOT         = path.join(__dirname, '..');
 const DIST         = path.join(ROOT, 'dist');
 const INITIAL_DATA = path.join(ROOT, 'src', 'data', 'initialState.json');
+
+// Load environment variables from .env.local / .env
+require('dotenv').config({ path: path.join(ROOT, '.env.local') });
+require('dotenv').config({ path: path.join(ROOT, '.env') });
 
 // ── Load data ─────────────────────────────────────────────────────────────────
 const data       = JSON.parse(fs.readFileSync(INITIAL_DATA, 'utf-8'));
@@ -53,8 +58,14 @@ function esc(str) {
     .replace(/'/g,  '&#39;');
 }
 
-function slug(str) {
-  return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+function slug(title) {
+  return String(title || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 80);
 }
 
 function writeFile(filePath, content) {
@@ -128,7 +139,7 @@ const categoryNavHtml = `
     <nav aria-label="Product categories">
       <h3>Browse by Category</h3>
       <ul>
-${categories.map(c => `        <li><a href="/search?category=${encodeURIComponent(c)}">${esc(c)} — Industrial Supplies UAE</a></li>`).join('\n')}
+${categories.map(c => `        <li><a href="/category/${encodeURIComponent(slug(c))}">${esc(c)} — Industrial Supplies UAE</a></li>`).join('\n')}
       </ul>
     </nav>
     <nav aria-label="Site pages">
@@ -142,7 +153,7 @@ ${categories.map(c => `        <li><a href="/search?category=${encodeURIComponen
     </nav>`;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PRODUCT PAGES  — dist/product/[id]/index.html
+// PRODUCT PAGES  — dist/product/[slug]/index.html
 // ═══════════════════════════════════════════════════════════════════════════════
 console.log(`\n🏗  Pre-rendering ${products.length} product pages…`);
 let productCount = 0;
@@ -150,12 +161,14 @@ let productCount = 0;
 for (const p of products) {
   if (!p.id) continue;
 
+  const pSlug = p.slug || slug(p.name);
+
   const productTitle = `${esc(p.name)} — ${esc(p.category || 'Industrial Supply')} | Al Zaydan International UAE`;
   const productDesc  = p.description
     ? esc(p.description.slice(0, 155)) + (p.description.length > 155 ? '…' : '')
     : `Buy ${esc(p.name)} in UAE. B2B wholesale industrial supply from Al Zaydan International. Request a quote today.`;
 
-  const canonicalUrl = `https://www.alzaydaninternational.com/product/${encodeURIComponent(p.id)}`;
+  const canonicalUrl = `https://www.alzaydaninternational.com/product/${encodeURIComponent(pSlug)}`;
 
   // Specification rows
   const specsHtml = (p.specifications && p.specifications.length > 0)
@@ -175,7 +188,7 @@ for (const p of products) {
   const relatedHtml = related.length > 0
     ? `<h3>Related Products in ${esc(p.category)}</h3>
       <ul>
-        ${related.map(r => `<li><a href="/product/${encodeURIComponent(r.id)}">${esc(r.name)}</a></li>`).join('\n        ')}
+        ${related.map(r => `<li><a href="/product/${encodeURIComponent(r.slug || slug(r.name))}">${esc(r.name)}</a></li>`).join('\n        ')}
       </ul>`
     : '';
 
@@ -197,7 +210,7 @@ for (const p of products) {
 
   const bodyHtml = `
     <h1>${esc(p.name)}</h1>
-    <p>Category: <a href="/search?category=${encodeURIComponent(p.category || '')}">${esc(p.category)}</a></p>
+    <p>Category: <a href="/category/${encodeURIComponent(slug(p.category || ''))}">${esc(p.category)}</a></p>
     ${p.description ? `<p>${esc(p.description)}</p>` : ''}
     ${p.brand ? `<p>Brand: ${esc(p.brand)}</p>` : ''}
     <p>Availability: ${p.inStock ? 'In Stock' : 'Out of Stock'}</p>
@@ -217,7 +230,7 @@ for (const p of products) {
     schemaJson: productSchema,
   });
 
-  const outPath = path.join(DIST, 'product', p.id, 'index.html');
+  const outPath = path.join(DIST, 'product', pSlug, 'index.html');
   writeFile(outPath, html);
   productCount++;
 }
@@ -337,11 +350,11 @@ const STATIC_PAGES = [
     industrial tools, and more to businesses across the UAE and GCC.</p>
     <h2>Browse by Category</h2>
     <ul>
-${categories.map(c => `      <li><a href="/search?category=${encodeURIComponent(c)}">${esc(c)} Products UAE</a> — ${products.filter(p => p.category === c).length} products available</li>`).join('\n')}
+${categories.map(c => `      <li><a href="/category/${encodeURIComponent(slug(c))}">${esc(c)} Products UAE</a> — ${products.filter(p => p.category === c).length} products available</li>`).join('\n')}
     </ul>
     <h2>All Products</h2>
     <ul>
-${products.slice(0, 100).map(p => `      <li><a href="/product/${encodeURIComponent(p.id)}">${esc(p.name)}</a> (${esc(p.category)})</li>`).join('\n')}
+${products.slice(0, 100).map(p => `      <li><a href="/product/${encodeURIComponent(p.slug || slug(p.name))}">${esc(p.name)}</a> (${esc(p.category)})</li>`).join('\n')}
     </ul>
     ${categoryNavHtml}`,
   },
@@ -400,7 +413,7 @@ ${products.slice(0, 100).map(p => `      <li><a href="/product/${encodeURICompon
     </p>
     <h2>Products in This Category</h2>
     <ul>
-${products.filter(p => p.category === 'Traffic Safety').map(p => `      <li><a href="/product/${encodeURIComponent(p.id)}">${esc(p.name)}</a></li>`).join('\n')}
+${products.filter(p => p.category === 'Traffic Safety').map(p => `      <li><a href="/product/${encodeURIComponent(p.slug || slug(p.name))}">${esc(p.name)}</a></li>`).join('\n')}
     </ul>
     <p><a href="/rfq">Request a Quote for Traffic Safety Equipment</a></p>
     <p><a href="/contact">Contact Our Sales Team</a></p>
@@ -456,7 +469,7 @@ ${products.filter(p => p.category === 'Traffic Safety').map(p => `      <li><a h
     </ul>
     <h2>Products in This Category</h2>
     <ul>
-${products.filter(p => p.category === 'Reflectors & Signage' || p.category === 'Traffic Safety').slice(0, 20).map(p => `      <li><a href="/product/${encodeURIComponent(p.id)}">${esc(p.name)}</a></li>`).join('\n')}
+${products.filter(p => p.category === 'Reflectors & Signage' || p.category === 'Traffic Safety').slice(0, 20).map(p => `      <li><a href="/product/${encodeURIComponent(p.slug || slug(p.name))}">${esc(p.name)}</a></li>`).join('\n')}
     </ul>
     <p><a href="/rfq">Request a Quote for Reflective Sheeting</a></p>
     ${categoryNavHtml}`,
@@ -488,7 +501,7 @@ ${products.filter(p => p.category === 'Reflectors & Signage' || p.category === '
     </ul>
     <h2>Products in This Category</h2>
     <ul>
-${products.filter(p => p.category === 'Flexible packaging raw materials' || p.category === 'Industrial Adhesive Tapes').map(p => `      <li><a href="/product/${encodeURIComponent(p.id)}">${esc(p.name)}</a></li>`).join('\n')}
+${products.filter(p => p.category === 'Flexible packaging raw materials' || p.category === 'Industrial Adhesive Tapes').map(p => `      <li><a href="/product/${encodeURIComponent(p.slug || slug(p.name))}">${esc(p.name)}</a></li>`).join('\n')}
     </ul>
     <p><a href="/rfq">Request a Quote for Packaging Materials</a></p>
     ${categoryNavHtml}`,
@@ -516,11 +529,152 @@ for (const page of STATIC_PAGES) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SUMMARY
+// CATEGORY PAGES  — dist/category/[slug]/index.html
 // ═══════════════════════════════════════════════════════════════════════════════
-const totalPages = productCount + staticCount;
-console.log(`\n🎉  Pre-render complete!`);
-console.log(`    📄  Product pages  : ${productCount}`);
-console.log(`    📝  Static pages   : ${staticCount}`);
-console.log(`    🔗  Total pages    : ${totalPages}`);
-console.log(`\n    Google and Screaming Frog can now discover all ${totalPages} pages from HTML source.\n`);
+console.log(`\n🏗  Pre-rendering ${categories.length} category pages…`);
+let categoryCount = 0;
+
+for (const c of categories) {
+  const cSlug = slug(c);
+  const catTitle = `${esc(c)} Products UAE | Al Zaydan International`;
+  const catDesc = `Browse all ${esc(c)} products from Al Zaydan International FZE. Sourced from top manufacturers, wholesale pricing, fast shipping across UAE and GCC.`;
+  const canonicalUrl = `https://www.alzaydaninternational.com/category/${encodeURIComponent(cSlug)}`;
+
+  const catProducts = products.filter(p => p.category === c);
+  const prodListHtml = catProducts.length > 0
+    ? `<ul>
+        ${catProducts.map(p => `<li><a href="/product/${encodeURIComponent(p.slug || slug(p.name))}">${esc(p.name)}</a></li>`).join('\n        ')}
+      </ul>`
+    : '<p>No products available in this category.</p>';
+
+  const bodyHtml = `
+    <h1>${esc(c)} Products UAE</h1>
+    <p>We supply high-quality ${esc(c)} products to businesses across the UAE and GCC. Sourced from verified global manufacturers with competitive wholesale pricing.</p>
+    <h2>Available Products</h2>
+    ${prodListHtml}
+    ${categoryNavHtml}
+    <p><a href="/rfq">Request a Quote for ${esc(c)} Products</a></p>
+    <p><a href="/contact">Contact Our Sourcing Team</a></p>`;
+
+  const html = buildPage({
+    title:      catTitle,
+    description: catDesc,
+    canonical:  canonicalUrl,
+    ogTitle:    catTitle,
+    ogDesc:     catDesc,
+    bodyHtml,
+    schemaJson: null,
+  });
+
+  const outPath = path.join(DIST, 'category', cSlug, 'index.html');
+  writeFile(outPath, html);
+  categoryCount++;
+  console.log(`  ✅  category/${cSlug}/index.html`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NETLIFY REDIRECTS  — dist/_redirects
+// ═══════════════════════════════════════════════════════════════════════════════
+console.log(`\n🏗  Generating Netlify _redirects file…`);
+
+function fetchFirestoreRedirects() {
+  return new Promise((resolve) => {
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID || 'alzaydaninternational';
+    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/redirects`;
+
+    console.log(`📡 Fetching redirects from Firestore: ${url}`);
+    
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          if (res.statusCode !== 200) {
+            console.log(`⚠️ Firestore returned status ${res.statusCode}.`);
+            resolve([]);
+            return;
+          }
+          const parsed = JSON.parse(data);
+          if (parsed && parsed.documents) {
+            const redirects = parsed.documents.map(doc => {
+              const fields = doc.fields || {};
+              const oldUrl = fields.oldUrl?.stringValue || '';
+              const newUrl = fields.newUrl?.stringValue || '';
+              const type = fields.type?.stringValue || '301';
+              const active = fields.active?.booleanValue !== false;
+              return { oldUrl, newUrl, type, active };
+            });
+            resolve(redirects.filter(r => r.active && r.oldUrl && r.newUrl));
+          } else {
+            console.log('⚠️ No custom redirects found in Firestore response.');
+            resolve([]);
+          }
+        } catch (err) {
+          console.error('❌ Failed to parse Firestore redirects JSON:', err);
+          resolve([]);
+        }
+      });
+    }).on('error', (err) => {
+      console.error('❌ Failed to fetch Firestore redirects:', err.message);
+      resolve([]);
+    });
+  });
+}
+
+async function writeRedirects() {
+  const redirectLines = [
+    '# Auto-generated redirects for URL SEO overhaul',
+  ];
+
+  try {
+    const customRedirects = await fetchFirestoreRedirects();
+    if (customRedirects.length > 0) {
+      redirectLines.push('# Custom redirects defined in Admin CMS');
+      customRedirects.forEach(r => {
+        let fromUrl = r.oldUrl.trim();
+        let toUrl = r.newUrl.trim();
+        if (!fromUrl.startsWith('/') && !fromUrl.startsWith('http')) fromUrl = '/' + fromUrl;
+        if (!toUrl.startsWith('/') && !toUrl.startsWith('http')) toUrl = '/' + toUrl;
+        redirectLines.push(`${fromUrl}  ${toUrl}  ${r.type || '301'}`);
+      });
+      redirectLines.push('');
+    }
+  } catch (err) {
+    console.error('⚠️ Error fetching firestore redirects:', err);
+  }
+
+  redirectLines.push('# Redirect legacy product ID URLs to SEO-friendly product slug URLs');
+  for (const p of products) {
+    if (!p.id) continue;
+    const pSlug = p.slug || slug(p.name);
+    redirectLines.push(`/product/${p.id}  /product/${pSlug}  301`);
+  }
+
+  redirectLines.push('', '# Redirect legacy search category query parameter URLs to category slug URLs');
+  for (const c of categories) {
+    const cSlug = slug(c);
+    const encodedPlus = encodeURIComponent(c).replace(/%20/g, '+');
+    const spaceForm = c.replace(/ /g, '+');
+    
+    redirectLines.push(`/search category=${encodeURIComponent(c)}  /category/${cSlug}  301`);
+    if (encodedPlus !== encodeURIComponent(c)) {
+      redirectLines.push(`/search category=${encodedPlus}  /category/${cSlug}  301`);
+    }
+    redirectLines.push(`/search category=${spaceForm}  /category/${cSlug}  301`);
+  }
+
+  redirectLines.push('', '# SPA catch-all fallback for React Router', '/*  /index.html  200');
+
+  fs.writeFileSync(path.join(DIST, '_redirects'), redirectLines.join('\n'), 'utf-8');
+  console.log(`  ✅  Written dist/_redirects`);
+
+  const totalPages = productCount + staticCount + categoryCount;
+  console.log(`\n🎉  Pre-render complete!`);
+  console.log(`    📄  Product pages  : ${productCount}`);
+  console.log(`    📝  Static pages   : ${staticCount}`);
+  console.log(`    📁  Category pages : ${categoryCount}`);
+  console.log(`    🔗  Total pages    : ${totalPages}`);
+  console.log(`\n    Google and Screaming Frog can now discover all ${totalPages} pages from HTML source.\n`);
+}
+
+writeRedirects();

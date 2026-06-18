@@ -4,6 +4,7 @@ import { useStore } from '../../context/StoreContext';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import type { Product } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 
 // ── Auto-slide config ─────────────────────────────────────────────────────────
 const SLIDE_EVERY       = 2500;  // ms between auto-slides
@@ -121,7 +122,7 @@ export default function DealsSection() {
                 return (
                   <Link
                     key={product.id}
-                    to={`/product/${product.id}`}
+                    to={`/product/${product.slug || generateSlug(product.name)}`}
                     className="snap-start shrink-0 bg-white rounded-2xl flex flex-col overflow-hidden group active:scale-[0.98] transition-transform"
                     style={{ width: 'calc(50vw - 20px)', minWidth: '155px', maxWidth: '200px' }}
                   >
@@ -205,7 +206,7 @@ export default function DealsSection() {
             const isAdded = addedQueue.includes(product.id);
             return (
               <Link
-                to={`/product/${product.id}`}
+                to={`/product/${product.slug || generateSlug(product.name)}`}
                 key={product.id}
                 className="bg-white rounded-3xl flex flex-col cursor-pointer relative group p-2 hover:shadow-xl transition-all border border-transparent hover:border-blue-400 overflow-hidden"
               >

@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   collection, doc, onSnapshot, addDoc, updateDoc,
-  deleteDoc, setDoc, writeBatch,
+  deleteDoc, setDoc, writeBatch, getDocs, getDoc,
+  query, where,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import INITIAL_STATE from '../data/initialState.json';
-import { getPublishedBlogs } from '../lib/blogService';
+import { getPublishedBlogs, generateSlug } from '../lib/blogService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,15 +28,67 @@ export type Product = {
   specifications?: { key: string; value: string }[];
   featured?: boolean;
   topSelling?: boolean;
-  // Pricing mode: 'fixed' (default) | 'range' | 'hidden'
   priceType?: 'fixed' | 'range' | 'hidden';
-  priceMin?: number;  // used when priceType === 'range'
-  priceMax?: number;  // used when priceType === 'range'
+  priceMin?: number;
+  priceMax?: number;
   moq?: string;
   leadTime?: string;
   shippingRegion?: string;
   trustBadges?: string[];
   badge?: string;
+  slug?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeyword?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  noIndex?: boolean;
+  noFollow?: boolean;
+};
+
+export type CategoryDetails = {
+  name: string;
+  slug: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeyword?: string;
+  ogImage?: string;
+  noIndex?: boolean;
+  noFollow?: boolean;
+};
+
+export type Redirect = {
+  id: string;
+  oldUrl: string;
+  newUrl: string;
+  type: '301' | '302';
+  active: boolean;
+};
+
+export type PageSeoSettings = {
+  seoTitle: string;
+  metaDescription: string;
+  canonicalUrl?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  noIndex?: boolean;
+  noFollow?: boolean;
+  schemaSelection?: string;
+};
+
+export type ImageSEO = {
+  imageUrl: string;
+  altText: string;
+  title: string;
+  caption?: string;
+  description?: string;
 };
 
 export type Video = {
@@ -110,12 +163,16 @@ type StoreState = {
   products: Product[];
   categories: string[];
   categoryImages: Record<string, string>;
+  categoryDetails: Record<string, CategoryDetails>;
   videos: Video[];
   dmEmployees: DMEmployee[];
   videoSectionVisible: boolean;
   loading: boolean;
   firestoreError: string | null;
   settings: GeneralSettings;
+  redirects: Redirect[];
+  pagesSeo: Record<string, PageSeoSettings>;
+  imagesSeo: Record<string, ImageSEO>;
 };
 
 type Subscriber = (state: StoreState) => void;
@@ -123,6 +180,9 @@ type Subscriber = (state: StoreState) => void;
 const CACHE_KEY          = 'az_products_cache_v2';
 const CACHE_SETTINGS_KEY = 'az_settings_cache_v1';
 const CACHE_CATS_KEY     = 'az_categories_cache_v1';
+const CACHE_REDIRECTS_KEY = 'az_redirects_cache_v1';
+const CACHE_PAGES_SEO_KEY = 'az_pages_seo_cache_v1';
+const CACHE_IMAGES_SEO_KEY = 'az_images_seo_cache_v1';
 
 // ── Products cache ─────────────────────────────────────────────────────────────
 function loadCachedProducts(): Product[] {
@@ -157,18 +217,43 @@ function saveSettingsCache(s: GeneralSettings) {
 }
 
 // ── Categories cache ───────────────────────────────────────────────────────────
-function loadCachedCategories(): { list: string[]; images: Record<string, string> } {
+function loadCachedCategories(): { list: string[]; images: Record<string, string>; details: Record<string, CategoryDetails> } {
   try {
     const raw = localStorage.getItem(CACHE_CATS_KEY);
-    if (!raw) return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {} };
-    return JSON.parse(raw);
+    if (!raw) return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {}, details: {} };
+    const parsed = JSON.parse(raw);
+    return {
+      list: parsed.list || [],
+      images: parsed.images || {},
+      details: parsed.details || {},
+    };
   } catch {
     localStorage.removeItem(CACHE_CATS_KEY);
-    return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {} };
+    return { list: INITIAL_STATE.categories.list, images: (INITIAL_STATE.categories as any).images || {}, details: {} };
   }
 }
-function saveCategoriesCache(list: string[], images: Record<string, string>) {
-  try { localStorage.setItem(CACHE_CATS_KEY, JSON.stringify({ list, images })); } catch { /* quota */ }
+function saveCategoriesCache(list: string[], images: Record<string, string>, details: Record<string, CategoryDetails>) {
+  try { localStorage.setItem(CACHE_CATS_KEY, JSON.stringify({ list, images, details })); } catch { /* quota */ }
+}
+
+// ── New SEO caches ──────────────────────────────────────────────────────────────
+function loadCachedRedirects(): Redirect[] {
+  try {
+    const raw = localStorage.getItem(CACHE_REDIRECTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+function loadCachedPagesSeo(): Record<string, PageSeoSettings> {
+  try {
+    const raw = localStorage.getItem(CACHE_PAGES_SEO_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+function loadCachedImagesSeo(): Record<string, ImageSEO> {
+  try {
+    const raw = localStorage.getItem(CACHE_IMAGES_SEO_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
 }
 
 // Clear old cache keys from previous versions
@@ -184,12 +269,16 @@ let state: StoreState = {
   products:            cachedProducts,
   categories:          cachedCategories.list,
   categoryImages:      cachedCategories.images,
+  categoryDetails:     cachedCategories.details,
   videos:              [],
   dmEmployees:         [],
   videoSectionVisible: true,
   loading:             false, // With hardcoded initial state, we never need a blocking loading screen
   firestoreError:      null,
   settings:            cachedSettings,
+  redirects:           loadCachedRedirects(),
+  pagesSeo:            loadCachedPagesSeo(),
+  imagesSeo:           loadCachedImagesSeo(),
 };
 
 const subscribers = new Set<Subscriber>();
@@ -247,8 +336,22 @@ function startListeners() {
         const data = snap.data();
         const list   = data.list as string[] || [];
         const images = data.images as Record<string, string> || {};
-        saveCategoriesCache(list, images);   // ← cache it
-        setState({ categories: list, categoryImages: images });
+        const rawDetails = data.details as Record<string, Partial<CategoryDetails>> || {};
+        
+        // Ensure every category in the list has populated details with fallbacks
+        const details: Record<string, CategoryDetails> = {};
+        list.forEach(name => {
+          const raw = rawDetails[name] || {};
+          details[name] = {
+            name,
+            slug: raw.slug || generateSlug(name),
+            seoTitle: raw.seoTitle || `${name} Equipment & Supplies | Al Zaydan International UAE`,
+            metaDescription: raw.metaDescription || `Buy high quality ${name} products online at wholesale prices from Al Zaydan International UAE. Request a quote today.`,
+          };
+        });
+
+        saveCategoriesCache(list, images, details);   // ← cache it
+        setState({ categories: list, categoryImages: images, categoryDetails: details });
       }
     },
     (err) => console.error('[Store] categories:', err.code)
@@ -301,6 +404,47 @@ function startListeners() {
     },
     (err) => console.error('[Store] generalSettings:', err.code)
   );
+
+  // Redirects
+  onSnapshot(
+    collection(db, 'redirects'),
+    (snap) => {
+      const redirects = snap.docs.map(d => ({ ...d.data(), id: d.id } as Redirect));
+      try { localStorage.setItem(CACHE_REDIRECTS_KEY, JSON.stringify(redirects)); } catch {}
+      setState({ redirects });
+    },
+    (err) => console.error('[Store] redirects listener error:', err)
+  );
+
+  // Pages SEO Settings
+  onSnapshot(
+    doc(db, 'settings', 'pagesSeo'),
+    (snap) => {
+      if (snap.exists()) {
+        const pagesSeo = snap.data() as Record<string, PageSeoSettings>;
+        try { localStorage.setItem(CACHE_PAGES_SEO_KEY, JSON.stringify(pagesSeo)); } catch {}
+        setState({ pagesSeo });
+      }
+    },
+    (err) => console.error('[Store] pagesSeo listener error:', err)
+  );
+
+  // Images SEO Metadata
+  onSnapshot(
+    collection(db, 'images_seo'),
+    (snap) => {
+      const mapping: Record<string, ImageSEO> = {};
+      snap.docs.forEach(d => {
+        const data = d.data() as ImageSEO;
+        if (data.imageUrl) {
+          mapping[data.imageUrl] = data;
+        }
+      });
+      try { localStorage.setItem(CACHE_IMAGES_SEO_KEY, JSON.stringify(mapping)); } catch {}
+      setState({ imagesSeo: mapping });
+    },
+    (err) => console.error('[Store] imagesSeo listener error:', err)
+  );
 }
 
 // Start listeners immediately when this module is imported
@@ -316,6 +460,7 @@ interface StoreContextType extends StoreState {
   updateCategory: (oldName: string, newName: string) => Promise<void>;
   deleteCategory: (name: string) => Promise<void>;
   updateCategoryImage: (name: string, imageUrl: string) => Promise<void>;
+  updateCategoryDetails: (name: string, details: Partial<CategoryDetails>) => Promise<void>;
   toggleFeatured: (id: string) => Promise<void>;
   toggleTopSelling: (id: string) => Promise<void>;
   addVideo: (data: Omit<Video, 'id'>) => Promise<void>;
@@ -323,10 +468,17 @@ interface StoreContextType extends StoreState {
   deleteVideo: (id: string) => Promise<void>;
   setVideoSectionVisible: (visible: boolean) => Promise<void>;
   updateGeneralSettings: (settings: Partial<GeneralSettings>) => Promise<void>;
-  // DM Employees
   addDMEmployee: (data: Omit<DMEmployee, 'id'>) => Promise<void>;
   updateDMEmployee: (id: string, data: Partial<Omit<DMEmployee, 'id'>>) => Promise<void>;
   deleteDMEmployee: (id: string) => Promise<void>;
+  regenerateSitemap: () => Promise<void>;
+  updateProductsBulk: (payloads: { id: string, data: Partial<Product> }[]) => Promise<void>;
+  updateCategoriesBulk: (payloads: { name: string, data: Partial<CategoryDetails> }[]) => Promise<void>;
+  addRedirect: (r: Omit<Redirect, 'id'>) => Promise<void>;
+  updateRedirect: (id: string, data: Partial<Redirect>) => Promise<void>;
+  deleteRedirect: (id: string) => Promise<void>;
+  updatePageSeo: (pageKey: string, data: Partial<PageSeoSettings>) => Promise<void>;
+  updateImageSeo: (imageUrl: string, data: Omit<ImageSEO, 'imageUrl'>) => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -351,16 +503,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const addProduct = async (data: Omit<Product, 'id'>) => {
     await addDoc(collection(db, 'products'), data);
+    updateSitemapMetadata(db);
   };
-
+ 
   const updateProduct = async (id: string, data: Partial<Product>) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _drop, ...payload } = data as Product;
     await updateDoc(doc(db, 'products', id), payload as Record<string, unknown>);
+    updateSitemapMetadata(db);
   };
-
+ 
   const deleteProduct = async (id: string) => {
     await deleteDoc(doc(db, 'products', id));
+    updateSitemapMetadata(db);
   };
 
   const toggleFeatured = async (id: string) => {
@@ -373,11 +528,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (p) await updateDoc(doc(db, 'products', id), { topSelling: !p.topSelling });
   };
 
-  const saveCategoryList = (list: string[], images: Record<string, string> = state.categoryImages) =>
-    setDoc(doc(db, 'settings', 'categories'), { list, images });
+  const saveCategoryList = async (
+    list: string[],
+    images: Record<string, string> = state.categoryImages,
+    details: Record<string, CategoryDetails> = state.categoryDetails
+  ) => {
+    await setDoc(doc(db, 'settings', 'categories'), { list, images, details });
+    updateSitemapMetadata(db);
+  };
 
-  const addCategory = async (name: string) =>
-    saveCategoryList([...state.categories, name]);
+  const addCategory = async (name: string) => {
+    const newDetails = { ...state.categoryDetails };
+    newDetails[name] = {
+      name,
+      slug: generateSlug(name),
+      seoTitle: `${name} Equipment & Supplies | Al Zaydan International UAE`,
+      metaDescription: `Buy high quality ${name} products online at wholesale prices from Al Zaydan International UAE.`
+    };
+    await saveCategoryList([...state.categories, name], state.categoryImages, newDetails);
+  };
 
   const updateCategory = async (oldName: string, newName: string) => {
     const newImages = { ...state.categoryImages };
@@ -385,7 +554,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       newImages[newName] = newImages[oldName];
       delete newImages[oldName];
     }
-    await saveCategoryList(state.categories.map(c => (c === oldName ? newName : c)), newImages);
+
+    const newDetails = { ...state.categoryDetails };
+    if (newDetails[oldName]) {
+      newDetails[newName] = {
+        ...newDetails[oldName],
+        name: newName,
+        slug: newDetails[oldName].slug || generateSlug(newName),
+      };
+      delete newDetails[oldName];
+    } else {
+      newDetails[newName] = {
+        name: newName,
+        slug: generateSlug(newName),
+        seoTitle: `${newName} Equipment & Supplies | Al Zaydan International UAE`,
+        metaDescription: `Buy high quality ${newName} products online at wholesale prices from Al Zaydan International UAE.`
+      };
+    }
+
+    await saveCategoryList(state.categories.map(c => (c === oldName ? newName : c)), newImages, newDetails);
     const affected = state.products.filter(p => p.category === oldName);
     if (affected.length > 0) {
       const batch = writeBatch(db);
@@ -397,12 +584,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const deleteCategory = async (name: string) => {
     const newImages = { ...state.categoryImages };
     delete newImages[name];
-    await saveCategoryList(state.categories.filter(c => c !== name), newImages);
+    const newDetails = { ...state.categoryDetails };
+    delete newDetails[name];
+    await saveCategoryList(state.categories.filter(c => c !== name), newImages, newDetails);
   };
 
   const updateCategoryImage = async (name: string, imageUrl: string) => {
     const newImages = { ...state.categoryImages, [name]: imageUrl };
-    await saveCategoryList(state.categories, newImages);
+    await saveCategoryList(state.categories, newImages, state.categoryDetails);
+  };
+
+  const updateCategoryDetails = async (name: string, detailsPatch: Partial<CategoryDetails>) => {
+    const newDetails = { ...state.categoryDetails };
+    const current = newDetails[name] || {
+      name,
+      slug: generateSlug(name),
+      seoTitle: `${name} Equipment & Supplies | Al Zaydan International UAE`,
+      metaDescription: `Buy high quality ${name} products online at wholesale prices from Al Zaydan International UAE.`
+    };
+    newDetails[name] = {
+      ...current,
+      ...detailsPatch,
+      name,
+    };
+    await saveCategoryList(state.categories, state.categoryImages, newDetails);
   };
 
 
@@ -445,22 +650,121 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     await deleteDoc(doc(db, 'dm_employees', id));
   };
 
+  const regenerateSitemap = async () => {
+    await updateSitemapMetadata(db);
+  };
+
+  const updateProductsBulk = async (payloads: { id: string, data: Partial<Product> }[]) => {
+    const batch = writeBatch(db);
+    payloads.forEach(payload => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _drop, ...cleanData } = payload.data as any;
+      batch.update(doc(db, 'products', payload.id), cleanData);
+    });
+    await batch.commit();
+    updateSitemapMetadata(db);
+  };
+
+  const updateCategoriesBulk = async (payloads: { name: string, data: Partial<CategoryDetails> }[]) => {
+    const newDetails = { ...state.categoryDetails };
+    payloads.forEach(p => {
+      const current = newDetails[p.name] || {
+        name: p.name,
+        slug: generateSlug(p.name),
+        seoTitle: `${p.name} Equipment & Supplies | Al Zaydan International UAE`,
+        metaDescription: `Buy high quality ${p.name} products online at wholesale prices from Al Zaydan International UAE.`
+      };
+      newDetails[p.name] = {
+        ...current,
+        ...p.data,
+        name: p.name,
+      };
+    });
+    await saveCategoryList(state.categories, state.categoryImages, newDetails);
+  };
+
+  const addRedirect = async (data: Omit<Redirect, 'id'>) => {
+    await addDoc(collection(db, 'redirects'), data);
+  };
+
+  const updateRedirect = async (id: string, data: Partial<Redirect>) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _drop, ...payload } = data as any;
+    await updateDoc(doc(db, 'redirects', id), payload);
+  };
+
+  const deleteRedirect = async (id: string) => {
+    await deleteDoc(doc(db, 'redirects', id));
+  };
+
+  const updatePageSeo = async (pageKey: string, data: Partial<PageSeoSettings>) => {
+    const newPagesSeo = { ...state.pagesSeo };
+    const current = newPagesSeo[pageKey] || { seoTitle: '', metaDescription: '' };
+    newPagesSeo[pageKey] = {
+      ...current,
+      ...data
+    };
+    await setDoc(doc(db, 'settings', 'pagesSeo'), newPagesSeo);
+  };
+
+  const updateImageSeo = async (imageUrl: string, data: Omit<ImageSEO, 'imageUrl'>) => {
+    const sanitizedId = btoa(imageUrl).replace(/\//g, '_').replace(/\+/g, '-').replace(/=/g, '');
+    await setDoc(doc(db, 'images_seo', sanitizedId), {
+      imageUrl,
+      ...data
+    });
+  };
+
   return (
     <StoreContext.Provider
       value={{
         ...snap,
         addProduct, updateProduct, deleteProduct,
         addCategory, updateCategory, deleteCategory, updateCategoryImage,
+        updateCategoryDetails,
         toggleFeatured, toggleTopSelling,
         addVideo, updateVideo, deleteVideo,
         setVideoSectionVisible,
         updateGeneralSettings,
         addDMEmployee, updateDMEmployee, deleteDMEmployee,
+        regenerateSitemap,
+        updateProductsBulk,
+        updateCategoriesBulk,
+        addRedirect, updateRedirect, deleteRedirect,
+        updatePageSeo,
+        updateImageSeo,
       }}
     >
       {children}
     </StoreContext.Provider>
   );
+}
+
+export async function updateSitemapMetadata(dbInstance: any) {
+  try {
+    const [productsSnap, categoriesDoc, blogsSnap] = await Promise.all([
+      getDocs(collection(dbInstance, 'products')),
+      getDoc(doc(dbInstance, 'settings', 'categories')),
+      getDocs(query(collection(dbInstance, 'blogs'), where('published', '==', true)))
+    ]);
+
+    const totalProducts = productsSnap.size;
+    const categoriesList = categoriesDoc.exists() ? (categoriesDoc.data()?.list || []) : [];
+    const totalCategories = categoriesList.length;
+    const totalBlogs = blogsSnap.size;
+    const totalPages = 13;
+
+    await setDoc(doc(dbInstance, 'settings', 'sitemap'), {
+      totalProducts,
+      totalCategories,
+      totalBlogs,
+      totalPages,
+      lastGeneratedTime: new Date().toISOString(),
+      status: 'Active'
+    });
+  } catch (err) {
+    console.error('[Store] Failed to update sitemap metadata:', err);
+  }
 }
 
 export function useStore() {

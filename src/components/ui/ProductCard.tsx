@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useStore } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 
 /* ─── Type (unchanged — no schema change) ──────────────────────────────────── */
 export interface MarketplaceProduct {
@@ -142,7 +143,7 @@ export default function ProductCard({ product, compact = false }: Props) {
 
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={`/product/${(product as any).slug || generateSlug(product.name)}`}
       className="group flex flex-col h-full bg-white border border-slate-200 hover:border-blue-400 hover:shadow-lg rounded-xl overflow-hidden transition-all duration-200"
     >
       {/* ── Image ── */}

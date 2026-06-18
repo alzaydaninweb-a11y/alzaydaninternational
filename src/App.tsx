@@ -1,5 +1,5 @@
-import React, { lazy, Suspense, Component, ReactNode } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { lazy, Suspense, Component, ReactNode, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 
 // ── Storefront pages — always eager (small, needed immediately) ───────────────
 import Layout           from './components/Layout';
@@ -24,7 +24,7 @@ import PackagingMaterialsPage   from './pages/PackagingMaterialsPage';
 import RoadSafetyPage           from './pages/RoadSafetyPage';
 
 import { CartProvider }  from './context/CartContext';
-import { StoreProvider } from './context/StoreContext';
+import { StoreProvider, useStore } from './context/StoreContext';
 import ScriptInjector    from './components/ScriptInjector';
 
 // ── Admin panel — lazy loaded (large, only needed by admins) ──────────────────
@@ -101,6 +101,42 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryS
   }
 }
 
+// ── Redirects Controller — matches router paths against active redirects ─────
+function RedirectController() {
+  const { redirects } = useStore();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!redirects || redirects.length === 0) return;
+    
+    const currentPath = location.pathname.toLowerCase().replace(/\/$/, '');
+    
+    const matched = redirects.find(r => {
+      if (!r.active) return false;
+      const oldUrlClean = r.oldUrl.trim().toLowerCase().replace(/\/$/, '');
+      return oldUrlClean === currentPath || 
+             (oldUrlClean.startsWith('/') ? oldUrlClean : '/' + oldUrlClean) === currentPath;
+    });
+
+    if (matched) {
+      console.log(`[Redirects] Routing client-side redirect: ${location.pathname} -> ${matched.newUrl}`);
+      let target = matched.newUrl.trim();
+      if (!target.startsWith('/') && !target.startsWith('http')) {
+        target = '/' + target;
+      }
+      
+      if (target.startsWith('http')) {
+        window.location.href = target;
+      } else {
+        navigate(target, { replace: true });
+      }
+    }
+  }, [location.pathname, redirects, navigate]);
+
+  return null;
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
@@ -109,6 +145,7 @@ export default function App() {
         <ScriptInjector />
         <CartProvider>
           <BrowserRouter>
+            <RedirectController />
             <ScrollToTop />
             <Routes>
               {/* Admin Panel — lazy loaded, scoped Suspense, separate from storefront */}
@@ -143,8 +180,9 @@ export default function App() {
                 <Route path="contact"       element={<ContactPage />} />
                 <Route path="legal"         element={<LegalPage />} />
                 <Route path="search"        element={<SearchPage />} />
+                <Route path="category/:slug" element={<SearchPage />} />
                 <Route path="categories"    element={<CategoriesMobilePage />} />
-                <Route path="product/:id"   element={<ProductPage />} />
+                <Route path="product/:slug" element={<ProductPage />} />
                 <Route path="cart"          element={<CartPage />} />
                 <Route path="checkout"      element={<CheckoutPage />} />
                 <Route path="order-success" element={<OrderSuccessPage />} />

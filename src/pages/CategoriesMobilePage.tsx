@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Grid } from 'lucide-react';
 import { useStore, Product } from '../context/StoreContext';
 import { useSEO } from '../lib/useSEO';
+import { generateSlug } from '../lib/blogService';
 
 export default function CategoriesMobilePage() {
-  const { categories, categoryImages, products } = useStore();
+  const { categories, categoryImages, products, categoryDetails } = useStore();
   const navigate = useNavigate();
 
   useSEO({
@@ -53,7 +54,7 @@ export default function CategoriesMobilePage() {
             return (
               <button
                 key={i}
-                onClick={() => navigate(`/search?category=${encodeURIComponent(cat)}`)}
+                onClick={() => navigate(`/category/${categoryDetails?.[cat]?.slug || generateSlug(cat)}`)}
                 className="group flex flex-col focus:outline-none w-full text-left"
               >
                 <div className="w-full aspect-square bg-[#f4f6f8] rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">

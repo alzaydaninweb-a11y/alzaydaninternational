@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar, User, Tag, BookOpen, Loader2, ArrowRight, ShoppingBag, Youtube, Star } from 'lucide-react';
-import { getBlogBySlug, getPublishedBlogs, BlogPost } from '../lib/blogService';
+import { getBlogBySlug, getPublishedBlogs, BlogPost, generateSlug } from '../lib/blogService';
 import { useStore, Product } from '../context/StoreContext';
 import { useCart } from '../context/CartContext';
 import { useSEO } from '../lib/useSEO';
@@ -236,7 +236,7 @@ export default function BlogPostPage() {
                 {relatedProducts.map(product => (
                   <Link 
                     key={product.id} 
-                    to={`/product/${product.id}`} 
+                    to={`/product/${product.slug || generateSlug(product.name)}`} 
                     className="w-full bg-white rounded-3xl flex flex-col snap-start cursor-pointer relative group p-2 hover:shadow-lg transition-all border border-gray-200 overflow-hidden"
                   >
                     

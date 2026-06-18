@@ -16,6 +16,11 @@ import AdminSettings from './pages/AdminSettings';
 import AdminCustomerSupport from './pages/AdminCustomerSupport';
 import AdminExpertProfile from './pages/AdminExpertProfile';
 import AdminMarketing from './pages/AdminMarketing';
+import AdminSitemap from './pages/AdminSitemap';
+import AdminSEODashboard from './pages/AdminSEODashboard';
+import AdminSEOBulk from './pages/AdminSEOBulk';
+import AdminRedirects from './pages/AdminRedirects';
+import AdminPageSEO from './pages/AdminPageSEO';
 
 function AdminRoutes() {
   const { isAuthenticated, loading } = useAdminAuth();
@@ -74,6 +79,11 @@ function AdminRoutes() {
         <Route path="support"            element={<AdminCustomerSupport />} />
         <Route path="expert"             element={<AdminExpertProfile />} />
         <Route path="marketing"          element={<AdminMarketing />} />
+        <Route path="sitemap"            element={<AdminSitemap />} />
+        <Route path="seo-dashboard"      element={<AdminSEODashboard />} />
+        <Route path="seo-bulk"           element={<AdminSEOBulk />} />
+        <Route path="redirects"          element={<AdminRedirects />} />
+        <Route path="page-seo"           element={<AdminPageSEO />} />
         <Route path="settings"           element={<AdminSettings />} />
         <Route path="*"                  element={<Navigate to="dashboard" replace />} />
       </Route>

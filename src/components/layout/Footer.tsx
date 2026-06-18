@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, CreditCard, Lock, Award, Instagram, Facebook, Linkedin, Youtube, Twitter, Phone, Mail, MapPin } from 'lucide-react';
 import WhatsAppIcon from '../icons/WhatsAppIcon';
 import { useStore } from '../../context/StoreContext';
+import { generateSlug } from '../../lib/blogService';
 
 export default function Footer() {
-  const { settings, categories } = useStore();
+  const { settings, categories, categoryDetails } = useStore();
 
   return (
     <footer className="bg-slate-900 border-t border-slate-800 pt-16 pb-8 text-sm text-slate-300">
@@ -133,7 +134,7 @@ export default function Footer() {
             <ul className="space-y-4 font-medium text-sm">
               {categories.map(cat => (
                 <li key={cat}>
-                  <Link to={`/search?category=${encodeURIComponent(cat)}`} className="hover:text-white transition-colors capitalize">
+                  <Link to={`/category/${categoryDetails?.[cat]?.slug || generateSlug(cat)}`} className="hover:text-white transition-colors capitalize">
                     {cat}
                   </Link>
                 </li>

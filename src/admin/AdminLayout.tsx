@@ -3,7 +3,8 @@ import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import {
   LayoutDashboard, Package, Tag, Home, ShoppingBag,
-  LogOut, Menu, X, ChevronRight, Bell, Building2, Youtube, BookOpen, Settings, HeadphonesIcon, Megaphone
+  LogOut, Menu, X, ChevronRight, Bell, Building2, Youtube, BookOpen, Settings, HeadphonesIcon, Megaphone,
+  Globe, BarChart3, RefreshCw
 } from 'lucide-react';
 
 const NAV = [
@@ -13,10 +14,15 @@ const NAV = [
   { to: '/admin/homepage',  icon: Home,             label: 'Homepage'  },
   { to: '/admin/videos',    icon: Youtube,          label: 'Videos'    },
   { to: '/admin/blogs',     icon: BookOpen,         label: 'Blog Creator'},
+  { to: '/admin/seo-dashboard', icon: BarChart3,    label: 'SEO Dashboard'},
+  { to: '/admin/seo-bulk',  icon: Tag,             label: 'Bulk SEO Editor'},
+  { to: '/admin/redirects', icon: RefreshCw,       label: 'Redirects Manager'},
+  { to: '/admin/page-seo',  icon: Globe,            label: 'Page SEO Manager'},
   { to: '/admin/settings',  icon: Settings,         label: 'Settings'  },
   { to: '/admin/marketing', icon: Megaphone,        label: 'Marketing' },
   { to: '/admin/expert',    icon: HeadphonesIcon,   label: 'Expert Profile' },
   { to: '/admin/support',   icon: HeadphonesIcon,   label: 'Customer Support'},
+  { to: '/admin/sitemap',   icon: Globe,            label: 'Sitemap Manager'},
 ];
 
 export default function AdminLayout() {

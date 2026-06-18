@@ -1,23 +1,47 @@
 import React, { useState, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Star, ShieldCheck, Truck, Heart, Share2, Info, ChevronRight, Check, ShoppingCart, Minus, Plus, PhoneCall } from 'lucide-react';
+import { Star, ShieldCheck, Truck, Heart, Share2, Info, ChevronRight, Check, ShoppingCart, Minus, Plus, PhoneCall, Loader2 } from 'lucide-react';
 import WhatsAppIcon from '../components/icons/WhatsAppIcon';
 import { useCart } from '../context/CartContext';
 import ProductListingGrid from '../components/home/ProductListingGrid';
 import PriceDisplay from '../components/ui/PriceDisplay';
+import { generateSlug } from '../lib/blogService';
+import { useSEO } from '../lib/useSEO';
 
 export default function ProductPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
-  const { products } = useStore();
-  const product = products.find(p => p.id === (id || '1')) || products[0];
+  const { products, categoryDetails } = useStore();
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
+  const product = useMemo(() => {
+    if (!slug || !products.length) return null;
+    return products.find(p => p.slug === slug || generateSlug(p.name) === slug || p.id === slug) || products[0];
+  }, [products, slug]);
+
+  const productSlug = useMemo(() => {
+    if (!product) return '';
+    return product.slug || generateSlug(product.name);
+  }, [product]);
+
+  const categorySlug = useMemo(() => {
+    if (!product) return '';
+    const details = Object.values(categoryDetails || {}).find(c => c.name === product.category);
+    return details?.slug || generateSlug(product.category);
+  }, [product, categoryDetails]);
+
+  useSEO({
+    title: product ? (product.seoTitle || `${product.name} | ${product.category} Supplier UAE | Al Zaydan International`) : 'Loading Product...',
+    description: product ? (product.metaDescription || product.description || `Buy high quality ${product.name} online from Al Zaydan.`) : '',
+    canonical: product ? `https://www.alzaydaninternational.com/product/${productSlug}` : '',
+  });
+
   const allImages = useMemo(() => {
+    if (!product) return [];
     const imgs = [product.image];
     if (product.images && Array.isArray(product.images)) {
       product.images.forEach(img => {
@@ -49,6 +73,7 @@ export default function ProductPage() {
   };
 
   const relatedProducts = useMemo(() => {
+    if (!product) return [];
     // 1. Same category
     const sameCategory = products.filter(p => p.category === product.category && p.id !== product.id);
     let related = [...sameCategory];
@@ -61,15 +86,35 @@ export default function ProductPage() {
   }, [products, product]);
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+    if (product) {
+      addToCart(product, quantity);
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
+    }
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
-    navigate('/checkout');
+    if (product) {
+      addToCart(product, quantity);
+      navigate('/checkout');
+    }
   };
+
+  if (!products.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (slug === product.id) {
+    return <Navigate to={`/product/${productSlug}`} replace />;
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -78,7 +123,7 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto flex items-center gap-1.5 md:gap-2">
           <Link to="/" className="hover:text-amber-500 transition-colors shrink-0">Home</Link>
           <span className="text-slate-400">/</span>
-          <Link to={`/search?category=${encodeURIComponent(product.category)}`} className="hover:text-amber-500 transition-colors shrink-0 whitespace-nowrap">{product.category}</Link>
+          <Link to={`/category/${categorySlug}`} className="hover:text-amber-500 transition-colors shrink-0 whitespace-nowrap">{product.category}</Link>
           <span className="text-slate-400">/</span>
           <span className="text-slate-900 truncate font-semibold">{product.name}</span>
         </div>
@@ -355,7 +400,7 @@ export default function ProductPage() {
           <div className="mt-16 pt-12 border-t border-slate-200">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-slate-900">Related Products</h2>
-              <Link to={`/search?category=${encodeURIComponent(product.category)}`} className="text-blue-600 hover:text-blue-700 font-bold text-sm flex items-center gap-1 transition-colors">
+              <Link to={`/category/${categorySlug}`} className="text-blue-600 hover:text-blue-700 font-bold text-sm flex items-center gap-1 transition-colors">
                 View All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
